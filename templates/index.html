@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-gradient-to-b from-blue-50 to-slate-50 py-16 md:py-24">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <!-- Title -->
+        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            Найдите книгу в библиотеке
+        </h2>
+        <p class="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">
+            Поиск по каталогу Централизованной библиотечной системы города Вологды. 
+            Узнайте, в какой библиотеке есть нужная книга.
+        </p>
+        
+        <!-- Search Form -->
+        <div class="max-w-2xl mx-auto relative">
+            <form action="/search" method="get" class="relative">
+                <div class="relative">
+                    <!-- Search Icon -->
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="search" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                    
+                    <!-- Search Input -->
+                    <input 
+                        type="text" 
+                        name="q" 
+                        id="search-input"
+                        placeholder="Введите название книги или автора..."
+                        class="search-input w-full pl-12 pr-24 py-4 text-lg bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500 transition"
+                        autocomplete="off"
+                        hx-get="/api/v1/search/suggestions"
+                        hx-trigger="keyup changed delay:200ms"
+                        hx-target="#suggestions"
+                        hx-indicator="#search-loading"
+                    >
+                    
+                    <!-- Loading Indicator -->
+                    <div id="search-loading" class="absolute inset-y-0 right-20 flex items-center hidden">
+                        <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                    
+                    <!-- Search Button -->
+                    <button 
+                        type="submit" 
+                        class="absolute inset-y-2 right-2 px-6 bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-lg transition flex items-center space-x-2"
+                    >
+                        <span>Найти</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                
+                <!-- Suggestions Dropdown -->
+                <div 
+                    id="suggestions" 
+                    class="absolute z-10 w-full mt-2 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
+                >
+                    <!-- HTMX will populate this -->
+                </div>
+            </form>
+        </div>
+        
+        <!-- Popular Searches -->
+        <div class="mt-6">
+            <p class="text-sm text-slate-500 mb-3">Популярные запросы:</p>
+            <div class="flex flex-wrap justify-center gap-2">
+                <a href="/search?q=Толстой" class="px-3 py-1 bg-white border border-slate-200 rounded-full text-sm text-slate-600 hover:border-blue-500 hover:text-blue-700 transition">
+                    Толстой
+                </a>
+                <a href="/search?q=Пушкин" class="px-3 py-1 bg-white border border-slate-200 rounded-full text-sm text-slate-600 hover:border-blue-500 hover:text-blue-700 transition">
+                    Пушкин
+                </a>
+                <a href="/search?q=Достоевский" class="px-3 py-1 bg-white border border-slate-200 rounded-full text-sm text-slate-600 hover:border-blue-500 hover:text-blue-700 transition">
+                    Достоевский
+                </a>
+                <a href="/search?q=Война+и+мир" class="px-3 py-1 bg-white border border-slate-200 rounded-full text-sm text-slate-600 hover:border-blue-500 hover:text-blue-700 transition">
+                    Война и мир
+                </a>
+                <a href="/search?q=Мастер+и+Маргарита" class="px-3 py-1 bg-white border border-slate-200 rounded-full text-sm text-slate-600 hover:border-blue-500 hover:text-blue-700 transition">
+                    Мастер и Маргарита
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-12 bg-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div class="p-6">
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-xl mb-4">
+                    <i data-lucide="book" class="w-6 h-6 text-blue-700"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">20+</h3>
+                <p class="text-slate-600">тысяч книг в каталоге</p>
+            </div>
+            <div class="p-6">
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-xl mb-4">
+                    <i data-lucide="building-2" class="w-6 h-6 text-green-700"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">11</h3>
+                <p class="text-slate-600">филиалов в городе</p>
+            </div>
+            <div class="p-6">
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-purple-100 rounded-xl mb-4">
+                    <i data-lucide="users" class="w-6 h-6 text-purple-700"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900">50+</h3>
+                <p class="text-slate-600">тысяч читателей</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Libraries Section -->
+<section class="py-12 bg-slate-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-slate-900 text-center mb-8">Наши библиотеки</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Library Cards -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="bg-blue-100 p-3 rounded-lg">
+                        <i data-lucide="library" class="w-6 h-6 text-blue-700"></i>
+                    </div>
+                    <span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded">Центральная</span>
+                </div>
+                <h3 class="font-semibold text-slate-900 mb-2">Центр писателя В.И. Белова</h3>
+                <p class="text-sm text-slate-600 mb-3">ул. Пушкинская, 2</p>
+                <p class="text-sm text-slate-500">Пн-Пт: 10:00-19:00</p>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="bg-green-100 p-3 rounded-lg">
+                        <i data-lucide="library" class="w-6 h-6 text-green-700"></i>
+                    </div>
+                </div>
+                <h3 class="font-semibold text-slate-900 mb-2">Библиотека на Панкратова</h3>
+                <p class="text-sm text-slate-600 mb-3">ул. Панкратова, 35</p>
+                <p class="text-sm text-slate-500">Пн-Пт: 11:00-19:00</p>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="bg-purple-100 p-3 rounded-lg">
+                        <i data-lucide="library" class="w-6 h-6 text-purple-700"></i>
+                    </div>
+                </div>
+                <h3 class="font-semibold text-slate-900 mb-2">Библиотека на Добролюбова</h3>
+                <p class="text-sm text-slate-600 mb-3">ул. Добролюбова, 23</p>
+                <p class="text-sm text-slate-500">Пн-Пт: 11:00-19:00</p>
+            </div>
+        </div>
+        
+        <div class="text-center mt-8">
+            <a href="/libraries" class="inline-flex items-center space-x-2 text-blue-700 hover:text-blue-800 font-medium">
+                <span>Все библиотеки</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-12 bg-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-slate-900 text-center mb-8">Как найти книгу</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                    <span class="text-2xl font-bold text-blue-700">1</span>
+                </div>
+                <h3 class="font-semibold text-slate-900 mb-2">Введите запрос</h3>
+                <p class="text-sm text-slate-600">Название книги, автора или ISBN</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                    <span class="text-2xl font-bold text-blue-700">2</span>
+                </div>
+                <h3 class="font-semibold text-slate-900 mb-2">Выберите книгу</h3>
+                <p class="text-sm text-slate-600">Просмотрите результаты поиска</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                    <span class="text-2xl font-bold text-blue-700">3</span>
+                </div>
+                <h3 class="font-semibold text-slate-900 mb-2">Заберите в библиотеке</h3>
+                <p class="text-sm text-slate-600">Узнайте, где есть книга в наличии</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
