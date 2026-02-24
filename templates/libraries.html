@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Библиотеки — ЦБС Вологды{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="bg-gradient-to-b from-blue-50 to-slate-50 py-12">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            Наши библиотеки
+        </h1>
+        <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+            Централизованная библиотечная система объединяет 11 филиалов 
+            в разных районах города Вологды
+        </p>
+    </div>
+</section>
+
+<!-- Libraries List -->
+<section class="py-12 bg-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="libraries-list">
+            <!-- HTMX will populate this -->
+            <div class="col-span-full text-center py-12">
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-4">
+                    <svg class="animate-spin h-6 w-6 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <p class="text-slate-600">Загрузка списка библиотек...</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Map Section (placeholder) -->
+<section class="py-12 bg-slate-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-slate-900 text-center mb-8">Карта расположения</h2>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
+                <i data-lucide="map" class="w-8 h-8 text-slate-400"></i>
+            </div>
+            <p class="text-slate-600 mb-4">Карта с расположением библиотек будет добавлена позже</p>
+            <a href="https://cbs-vologda.ru/o-nas/najdi-svoyu-biblioteku.html" target="_blank" class="inline-flex items-center space-x-2 text-blue-700 hover:text-blue-800 font-medium">
+                <span>Смотреть на текущем сайте</span>
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Load Libraries with HTMX -->
+<script>
+    // Load libraries on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('libraries-list');
+        
+        fetch('/api/v1/libraries')
+            .then(response => response.json())
+            .then(libraries => {
+                container.innerHTML = libraries.map(lib => `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="bg-blue-100 p-3 rounded-lg">
+                                <i data-lucide="library" class="w-6 h-6 text-blue-700"></i>
+                            </div>
+                            ${lib.id === 1 ? '<span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded">Центральная</span>' : ''}
+                        </div>
+                        <h3 class="font-semibold text-slate-900 mb-2">${lib.name}</h3>
+                        <p class="text-sm text-slate-600 mb-3">${lib.address || 'Адрес не указан'}</p>
+                        ${lib.phone ? `<p class="text-sm text-slate-500 mb-2 flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4"></i>${lib.phone}</p>` : ''}
+                        ${lib.work_hours ? `<p class="text-sm text-slate-500 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i>${lib.work_hours}</p>` : ''}
+                    </div>
+                `).join('');
+                
+                // Re-initialize icons
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            })
+            .catch(error => {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <div class="inline-flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-4">
+                            <i data-lucide="alert-circle" class="w-6 h-6 text-red-600"></i>
+                        </div>
+                        <p class="text-slate-600">Ошибка загрузки данных</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            });
+    });
+</script>
+{% endblock %}
