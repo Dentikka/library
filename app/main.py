@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from contextlib import asynccontextmanager
 
 from app.database import engine, Base
+from app.routers import auth, libraries
 
 
 @asynccontextmanager
@@ -22,6 +23,10 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Include routers
+app.include_router(auth.router)
+app.include_router(libraries.router)
 
 # Static files and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
