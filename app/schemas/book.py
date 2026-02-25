@@ -1,13 +1,13 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
 
 
 class BookBase(BaseModel):
-    title: str
-    isbn: Optional[str] = None
-    year: Optional[int] = None
-    description: Optional[str] = None
+    title: str = Field(..., min_length=1, max_length=500)
+    isbn: Optional[str] = Field(None, max_length=20)
+    year: Optional[int] = Field(None, ge=0, le=2100)
+    description: Optional[str] = Field(None, max_length=5000)
 
 
 class BookCreate(BookBase):
@@ -15,11 +15,11 @@ class BookCreate(BookBase):
 
 
 class BookUpdate(BaseModel):
-    title: Optional[str] = None
+    title: Optional[str] = Field(None, min_length=1, max_length=500)
     author_id: Optional[int] = None
-    isbn: Optional[str] = None
-    year: Optional[int] = None
-    description: Optional[str] = None
+    isbn: Optional[str] = Field(None, max_length=20)
+    year: Optional[int] = Field(None, ge=0, le=2100)
+    description: Optional[str] = Field(None, max_length=5000)
 
 
 class BookInDB(BookBase):

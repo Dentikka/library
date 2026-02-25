@@ -298,7 +298,7 @@ async def upload_book_cover(
         )
     
     # Validate content type
-    if cover.content_type not in ALLOWED_IMAGE_TYPES:
+    if not cover.content_type or cover.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid content type. Allowed types: {', '.join(ALLOWED_IMAGE_TYPES)}"
