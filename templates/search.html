@@ -12,15 +12,21 @@
             </a>
             
             <!-- Search Form -->
-            <form action="/search" method="get" class="flex-grow max-w-2xl">
+            <form id="search-form" class="flex-grow max-w-2xl" onsubmit="return performSearch(event)">
                 <div class="relative">
                     <input 
                         type="text" 
+                        id="search-input"
                         name="q" 
                         value="{{ query }}"
                         placeholder="Поиск книг..."
                         class="w-full pl-4 pr-12 py-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        autocomplete="off"
+                        oninput="showSuggestions(this.value)"
                     >
+                    <!-- Suggestions Dropdown -->
+                    <div id="suggestions" class="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-slate-200 hidden">
+                    </div>
                     <button type="submit" class="absolute inset-y-0 right-0 px-4 text-slate-400 hover:text-blue-600">
                         <i data-lucide="search" class="w-5 h-5"></i>
                     </button>
@@ -34,18 +40,17 @@
 <section class="py-8">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Results Header -->
-        <div class="mb-6" id="results-header" hx-trigger="load" hx-get="/api/v1/search?q={{ query|urlencode }}" hx-target="#results-container" hx-swap="innerHTML">
+        <div class="mb-6">
             <h1 class="text-xl font-semibold text-slate-900">
-                Поиск: <span class="text-blue-700">{{ query }}</span>
+                Поиск: <span class="text-blue-700" id="search-query">{{ query }}</span>
             </h1>
-            <p class="text-slate-500 mt-1">Загрузка результатов...</p>
+            <p class="text-slate-500 mt-1" id="results-count">Загрузка результатов...</p>
         </div>
         
         <!-- Results Container -->
         <div id="results-container">
-            <!-- HTMX will populate this -->
-            <div class="space-y-4">
-                <!-- Loading skeleton -->
+            <!-- Loading skeleton -->
+            <div class="space-y-4" id="loading-skeleton">
                 {% for i in range(3) %}
                 <div class="bg-white rounded-xl border border-slate-200 p-6 animate-pulse">
                     <div class="flex gap-4">
@@ -62,75 +67,178 @@
         </div>
     </div>
 </section>
-
-<!-- Results Template (for HTMX) -->
-<script type="text/html" id="results-template">
-    <div class="space-y-4">
-        {% raw %}
-        {{#results}}
-        <div class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md transition">
-            <div class="flex gap-4">
-                <!-- Book Cover Placeholder -->
-                <div class="w-24 h-32 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="book" class="w-8 h-8 text-slate-400"></i>
-                </div>
-                
-                <div class="flex-grow">
-                    <!-- Title -->
-                    <h3 class="text-lg font-semibold text-slate-900 mb-1">
-                        <a href="/books/{{id}}" class="hover:text-blue-700 transition">{{title}}</a>
-                    </h3>
-                    
-                    <!-- Author & Year -->
-                    <p class="text-slate-600 mb-2">{{author_name}}{{#year}}, {{year}}{{/year}}</p>
-                    
-                    <!-- Availability -->
-                    <div class="flex items-center gap-4">
-                        {{#available_count}}
-                        <span class="inline-flex items-center gap-1 text-green-700 bg-green-50 px-3 py-1 rounded-full text-sm">
-                            <i data-lucide="check-circle" class="w-4 h-4"></i>
-                            Доступно: {{available_count}} из {{total_count}}
-                        </span>
-                        {{/available_count}}
-                        {{^available_count}}
-                        <span class="inline-flex items-center gap-1 text-red-700 bg-red-50 px-3 py-1 rounded-full text-sm">
-                            <i data-lucide="x-circle" class="w-4 h-4"></i>
-                            Нет в наличии
-                        </span>
-                        {{/available_count}}
-                    </div>
-                </div>
-                
-                <!-- Arrow -->
-                <div class="flex items-center">
-                    <a href="/books/{{id}}" class="text-slate-400 hover:text-blue-700 transition">
-                        <i data-lucide="chevron-right" class="w-6 h-6"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-        {{/results}}
-        {{^results}}
-        <div class="text-center py-12">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
-                <i data-lucide="search-x" class="w-8 h-8 text-slate-400"></i>
-            </div>
-            <h3 class="text-lg font-semibold text-slate-900 mb-2">Ничего не найдено</h3>
-            <p class="text-slate-600">Попробуйте изменить поисковый запрос</p>
-        </div>
-        {{/results}}
-        {% endraw %}
-    </div>
-</script>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Handle search results with HTMX
-htmx.on('htmx:afterRequest', function(evt) {
-    if (evt.detail.target.id === 'results-container') {
-        lucide.createIcons();
+// Load search results on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const query = document.getElementById('search-input').value;
+    if (query) {
+        loadSearchResults(query);
     }
 });
+
+// Perform search
+function performSearch(event) {
+    event.preventDefault();
+    const query = document.getElementById('search-input').value;
+    if (query) {
+        // Update URL without reload
+        const url = new URL(window.location);
+        url.searchParams.set('q', query);
+        window.history.pushState({}, '', url);
+        
+        // Update display
+        document.getElementById('search-query').textContent = query;
+        document.getElementById('results-count').textContent = 'Загрузка результатов...';
+        document.getElementById('results-container').innerHTML = document.getElementById('loading-skeleton').innerHTML;
+        
+        // Load results
+        loadSearchResults(query);
+    }
+    return false;
+}
+
+// Load search results from API
+async function loadSearchResults(query) {
+    try {
+        const response = await fetch(`/api/v1/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        
+        document.getElementById('results-count').textContent = `Найдено: ${data.total} книг`;
+        
+        if (data.results && data.results.length > 0) {
+            const html = data.results.map(book => `
+                <div class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md transition">
+                    <div class="flex gap-4">
+                        <!-- Book Cover Placeholder -->
+                        <div class="w-24 h-32 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="book" class="w-8 h-8 text-slate-400"></i>
+                        </div>
+                        
+                        <div class="flex-grow">
+                            <!-- Title -->
+                            <h3 class="text-lg font-semibold text-slate-900 mb-1">
+                                <a href="/books/${book.id}" class="hover:text-blue-700 transition">${escapeHtml(book.title)}</a>
+                            </h3>
+                            
+                            <!-- Author & Year -->
+                            <p class="text-slate-600 mb-2">${escapeHtml(book.author_name)}${book.year ? ', ' + book.year : ''}</p>
+                            
+                            <!-- Availability -->
+                            <div class="flex items-center gap-4">
+                                ${book.available_count > 0 
+                                    ? `<span class="inline-flex items-center gap-1 text-green-700 bg-green-50 px-3 py-1 rounded-full text-sm">
+                                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                        Доступно: ${book.available_count} из ${book.total_count}
+                                       </span>`
+                                    : `<span class="inline-flex items-center gap-1 text-red-700 bg-red-50 px-3 py-1 rounded-full text-sm">
+                                        <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                        Нет в наличии
+                                       </span>`
+                                }
+                            </div>
+                        </div>
+                        
+                        <!-- Arrow -->
+                        <div class="flex items-center">
+                            <a href="/books/${book.id}" class="text-slate-400 hover:text-blue-700 transition">
+                                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('results-container').innerHTML = html;
+        } else {
+            document.getElementById('results-container').innerHTML = `
+                <div class="text-center py-12">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
+                        <i data-lucide="search-x" class="w-8 h-8 text-slate-400"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-slate-900 mb-2">Ничего не найдено</h3>
+                    <p class="text-slate-600">Попробуйте изменить поисковый запрос</p>
+                </div>
+            `;
+        }
+        
+        // Re-initialize icons
+        lucide.createIcons();
+    } catch (error) {
+        console.error('Search error:', error);
+        document.getElementById('results-container').innerHTML = `
+            <div class="text-center py-12">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                    <i data-lucide="alert-circle" class="w-8 h-8 text-red-600"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-900 mb-2">Ошибка поиска</h3>
+                <p class="text-slate-600">Попробуйте обновить страницу</p>
+            </div>
+        `;
+        lucide.createIcons();
+    }
+}
+
+// Show search suggestions
+let suggestionTimeout;
+async function showSuggestions(query) {
+    clearTimeout(suggestionTimeout);
+    const suggestionsDiv = document.getElementById('suggestions');
+    
+    if (!query || query.length < 2) {
+        suggestionsDiv.classList.add('hidden');
+        return;
+    }
+    
+    suggestionTimeout = setTimeout(async () => {
+        try {
+            const response = await fetch(`/api/v1/search/suggestions?q=${encodeURIComponent(query)}&limit=5`);
+            const data = await response.json();
+            
+            if (data.suggestions && data.suggestions.length > 0) {
+                suggestionsDiv.innerHTML = data.suggestions.map(s => {
+                    const text = s.replace(/^[📚✍️] /, ''); // Remove emoji prefix
+                    return `
+                        <div class="px-4 py-2 hover:bg-slate-100 cursor-pointer flex items-center gap-2" onclick="selectSuggestion('${escapeHtml(text)}')">
+                            <span class="text-lg">${s.startsWith('📚') ? '📚' : '✍️'}</span>
+                            <span class="text-slate-700">${escapeHtml(text)}</span>
+                        </div>
+                    `;
+                }).join('');
+                suggestionsDiv.classList.remove('hidden');
+            } else {
+                suggestionsDiv.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Suggestions error:', error);
+        }
+    }, 200);
+}
+
+// Select suggestion
+function selectSuggestion(text) {
+    document.getElementById('search-input').value = text;
+    document.getElementById('suggestions').classList.add('hidden');
+    performSearch({ preventDefault: () => {} });
+}
+
+// Hide suggestions when clicking outside
+document.addEventListener('click', function(e) {
+    const suggestionsDiv = document.getElementById('suggestions');
+    const searchInput = document.getElementById('search-input');
+    if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+        suggestionsDiv.classList.add('hidden');
+    }
+});
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 </script>
 {% endblock %}

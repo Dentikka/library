@@ -30,19 +30,8 @@
                         placeholder="Введите название книги или автора..."
                         class="search-input w-full pl-12 pr-24 py-4 text-lg bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500 transition"
                         autocomplete="off"
-                        hx-get="/api/v1/search/suggestions"
-                        hx-trigger="keyup changed delay:200ms"
-                        hx-target="#suggestions"
-                        hx-indicator="#search-loading"
+                        oninput="showSuggestions(this.value)"
                     >
-                    
-                    <!-- Loading Indicator -->
-                    <div id="search-loading" class="absolute inset-y-0 right-20 flex items-center hidden">
-                        <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    </div>
                     
                     <!-- Search Button -->
                     <button 
@@ -57,9 +46,9 @@
                 <!-- Suggestions Dropdown -->
                 <div 
                     id="suggestions" 
-                    class="absolute z-10 w-full mt-2 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
+                    class="absolute z-10 w-full mt-2 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden hidden"
                 >
-                    <!-- HTMX will populate this -->
+                    <!-- Populated by JavaScript -->
                 </div>
             </form>
         </div>
@@ -200,4 +189,69 @@
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Search suggestions
+let suggestionTimeout;
+async function showSuggestions(query) {
+    clearTimeout(suggestionTimeout);
+    const suggestionsDiv = document.getElementById('suggestions');
+    
+    if (!query || query.length < 2) {
+        suggestionsDiv.classList.add('hidden');
+        return;
+    }
+    
+    suggestionTimeout = setTimeout(async () => {
+        try {
+            const response = await fetch(`/api/v1/search/suggestions?q=${encodeURIComponent(query)}&limit=5`);
+            const data = await response.json();
+            
+            if (data.suggestions && data.suggestions.length > 0) {
+                suggestionsDiv.innerHTML = data.suggestions.map(s => {
+                    const text = s.replace(/^[📚✍️] /, '');
+                    const icon = s.startsWith('📚') ? '📚' : '✍️';
+                    return `
+                        <div class="px-4 py-3 hover:bg-slate-50 cursor-pointer flex items-center gap-3 border-b border-slate-100 last:border-0" 
+                             onclick="selectSuggestion('${escapeHtml(text)}')">
+                            <span class="text-2xl">${icon}</span>
+                            <span class="text-slate-700 text-lg">${escapeHtml(text)}</span>
+                        </div>
+                    `;
+                }).join('');
+                suggestionsDiv.classList.remove('hidden');
+            } else {
+                suggestionsDiv.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Suggestions error:', error);
+        }
+    }, 200);
+}
+
+function selectSuggestion(text) {
+    document.getElementById('search-input').value = text;
+    document.getElementById('suggestions').classList.add('hidden');
+    // Submit form
+    document.getElementById('search-input').form.submit();
+}
+
+// Hide suggestions when clicking outside
+document.addEventListener('click', function(e) {
+    const suggestionsDiv = document.getElementById('suggestions');
+    const searchInput = document.getElementById('search-input');
+    if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+        suggestionsDiv.classList.add('hidden');
+    }
+});
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
 {% endblock %}
