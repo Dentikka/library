@@ -267,13 +267,13 @@
                             }
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <a href="/books/${book.id}" target="_blank" class="text-blue-700 hover:text-blue-800 mr-3">
+                            <a href="/books/${book.id}" target="_blank" class="text-blue-700 hover:text-blue-800 mr-3" title="Просмотр">
                                 <i data-lucide="eye" class="w-5 h-5 inline"></i>
                             </a>
-                            <button class="text-slate-400 hover:text-slate-600 mr-3">
+                            <button onclick="openEditBookModal(${book.id})" class="text-slate-400 hover:text-blue-600 mr-3" title="Редактировать">
                                 <i data-lucide="edit" class="w-5 h-5 inline"></i>
                             </button>
-                            <button class="text-red-400 hover:text-red-600">
+                            <button onclick="deleteBook(${book.id})" class="text-red-400 hover:text-red-600" title="Удалить">
                                 <i data-lucide="trash-2" class="w-5 h-5 inline"></i>
                             </button>
                         </td>
@@ -286,12 +286,221 @@
             });
         }
         
-        function openAddBookModal() {
-            alert('Добавление книги будет реализовано в следующей версии');
+        // Authors cache
+        let authorsList = [];
+        let currentEditingBookId = null;
+        
+        // Load authors for select
+        async function loadAuthors() {
+            const token = localStorage.getItem('access_token');
+            try {
+                const response = await fetch('/api/v1/authors', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                authorsList = await response.json();
+            } catch (error) {
+                console.error('Error loading authors:', error);
+            }
         }
         
-        // Initialize icons
+        // Open modal for adding book
+        async function openAddBookModal() {
+            await loadAuthors();
+            currentEditingBookId = null;
+            document.getElementById('modal-title').textContent = 'Добавить книгу';
+            document.getElementById('book-form').reset();
+            populateAuthorSelect();
+            document.getElementById('book-modal').classList.remove('hidden');
+        }
+        
+        // Open modal for editing book
+        async function openEditBookModal(bookId) {
+            await loadAuthors();
+            currentEditingBookId = bookId;
+            document.getElementById('modal-title').textContent = 'Редактировать книгу';
+            
+            const token = localStorage.getItem('access_token');
+            try {
+                const response = await fetch(`/api/v1/books/${bookId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const book = await response.json();
+                
+                populateAuthorSelect(book.author_id);
+                document.getElementById('book-title').value = book.title;
+                document.getElementById('book-isbn').value = book.isbn || '';
+                document.getElementById('book-year').value = book.year || '';
+                document.getElementById('book-description').value = book.description || '';
+                
+                document.getElementById('book-modal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading book:', error);
+                alert('Ошибка загрузки книги');
+            }
+        }
+        
+        function populateAuthorSelect(selectedId = null) {
+            const select = document.getElementById('book-author');
+            select.innerHTML = '<option value="">Выберите автора</option>' +
+                authorsList.map(a => `<option value="${a.id}" ${a.id === selectedId ? 'selected' : ''}>${a.name}</option>`).join('');
+        }
+        
+        // Close modal
+        function closeBookModal() {
+            document.getElementById('book-modal').classList.add('hidden');
+            currentEditingBookId = null;
+        }
+        
+        // Save book (create or update)
+        async function saveBook(event) {
+            event.preventDefault();
+            
+            const token = localStorage.getItem('access_token');
+            const bookData = {
+                title: document.getElementById('book-title').value.trim(),
+                author_id: parseInt(document.getElementById('book-author').value),
+                isbn: document.getElementById('book-isbn').value.trim() || null,
+                year: document.getElementById('book-year').value ? parseInt(document.getElementById('book-year').value) : null,
+                description: document.getElementById('book-description').value.trim() || null
+            };
+            
+            if (!bookData.title || !bookData.author_id) {
+                alert('Название и автор обязательны');
+                return;
+            }
+            
+            try {
+                const url = currentEditingBookId 
+                    ? `/api/v1/books/${currentEditingBookId}`
+                    : '/api/v1/books';
+                const method = currentEditingBookId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(bookData)
+                });
+                
+                if (response.ok) {
+                    closeBookModal();
+                    loadBooks();
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Ошибка сохранения');
+                }
+            } catch (error) {
+                console.error('Error saving book:', error);
+                alert('Ошибка сохранения книги');
+            }
+        }
+        
+        // Delete book
+        async function deleteBook(bookId) {
+            if (!confirm('Удалить книгу? Это действие нельзя отменить.')) {
+                return;
+            }
+            
+            const token = localStorage.getItem('access_token');
+            try {
+                const response = await fetch(`/api/v1/books/${bookId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    loadBooks();
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Ошибка удаления');
+                }
+            } catch (error) {
+                console.error('Error deleting book:', error);
+                alert('Ошибка удаления книги');
+            }
+        }
+        
+        // Search books
+        function searchBooks() {
+            const query = document.getElementById('book-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#books-table-body tr');
+            rows.forEach(row => {
+                const title = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                const author = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                row.style.display = (title.includes(query) || author.includes(query)) ? '' : 'none';
+            });
+        }
+        
+        document.getElementById('book-search').addEventListener('input', searchBooks);
+        document.getElementById('book-form').addEventListener('submit', saveBook);
+        
+        // Initialize
+        loadAuthors();
         lucide.createIcons();
     </script>
+    
+    <!-- Book Modal -->
+    <div id="book-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center p-6 border-b border-slate-200">
+                <h3 id="modal-title" class="text-xl font-semibold text-slate-900">Добавить книгу</h3>
+                <button onclick="closeBookModal()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <form id="book-form" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Название <span class="text-red-500">*</span></label>
+                    <input type="text" id="book-title" required
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        placeholder="Введите название книги">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Автор <span class="text-red-500">*</span></label>
+                    <select id="book-author" required
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
+                        <option value="">Выберите автора</option>
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">ISBN</label>
+                        <input type="text" id="book-isbn"
+                            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            placeholder="978-3-16-148410-0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Год издания</label>
+                        <input type="number" id="book-year" min="1000" max="2099"
+                            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            placeholder="2024">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Описание</label>
+                    <textarea id="book-description" rows="3"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        placeholder="Краткое описание книги..."></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeBookModal()"
+                        class="px-4 py-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                        Отмена
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition">
+                        Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

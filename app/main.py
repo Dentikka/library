@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse
 from contextlib import asynccontextmanager
 
 from app.database import engine, Base
-from app.routers import auth, libraries, books, search
+from app.routers import auth, libraries, books, search, authors
 
 
 @asynccontextmanager
@@ -30,6 +30,7 @@ app.include_router(auth.router)
 app.include_router(libraries.router)
 app.include_router(books.router)
 app.include_router(search.router)
+app.include_router(authors.router)
 
 # Static files and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
