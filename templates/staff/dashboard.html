@@ -276,10 +276,16 @@
         }
         
         function showSection(section) {
+            console.log('Switching to section:', section);
             // Hide all sections
             document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
             // Show selected section
-            document.getElementById(`${section}-section`).classList.remove('hidden');
+            const sectionEl = document.getElementById(`${section}-section`);
+            if (sectionEl) {
+                sectionEl.classList.remove('hidden');
+            } else {
+                console.error('Section element not found:', `${section}-section`);
+            }
             
             // Update sidebar links
             document.querySelectorAll('.sidebar-link').forEach(el => {
@@ -356,12 +362,15 @@
         
         // Open modal for adding book
         async function openAddBookModal() {
+            console.log('Opening add book modal');
             await loadAuthors();
             currentEditingBookId = null;
             document.getElementById('modal-title').textContent = 'Добавить книгу';
             document.getElementById('book-form').reset();
             populateAuthorSelect();
             resetCoverSection();
+            document.getElementById('book-modal').classList.remove('hidden');
+            console.log('Modal opened successfully');
             // Disable cover upload until book is created
             document.getElementById('cover-input').disabled = true;
             document.querySelector('#cover-section label').classList.add('opacity-50', 'cursor-not-allowed');
