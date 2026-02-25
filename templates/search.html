@@ -151,7 +151,7 @@ function performSearch(event) {
 // Load search results from API
 async function loadSearchResults(query, page = 1) {
     try {
-        const response = await fetch(`/api/v1/search?q=${encodeURIComponent(query)}&page=${page}&limit=${ITEMS_PER_PAGE}`);
+        const response = await fetch(`/api/v1/search?q=${encodeURIComponent(query)}&page=${page}&per_page=${ITEMS_PER_PAGE}`);
         const data = await response.json();
         
         // Update pagination state
@@ -314,7 +314,7 @@ function renderPagination() {
     
     // Setup HTMX attributes for prev button
     if (currentPage > 1) {
-        btnPrev.setAttribute('hx-get', `/api/v1/search?q=${encodeURIComponent(currentQuery)}&page=${currentPage - 1}&limit=${ITEMS_PER_PAGE}`);
+        btnPrev.setAttribute('hx-get', `/api/v1/search?q=${encodeURIComponent(currentQuery)}&page=${currentPage - 1}&per_page=${ITEMS_PER_PAGE}`);
         btnPrev.setAttribute('hx-target', '#results-container');
         btnPrev.onclick = () => {
             loadSearchResults(currentQuery, currentPage - 1);
@@ -324,7 +324,7 @@ function renderPagination() {
     
     // Setup HTMX attributes for next button
     if (currentPage < totalPages) {
-        btnNext.setAttribute('hx-get', `/api/v1/search?q=${encodeURIComponent(currentQuery)}&page=${currentPage + 1}&limit=${ITEMS_PER_PAGE}`);
+        btnNext.setAttribute('hx-get', `/api/v1/search?q=${encodeURIComponent(currentQuery)}&page=${currentPage + 1}&per_page=${ITEMS_PER_PAGE}`);
         btnNext.setAttribute('hx-target', '#results-container');
         btnNext.onclick = () => {
             loadSearchResults(currentQuery, currentPage + 1);
@@ -389,7 +389,7 @@ function createPageButton(pageNum) {
     
     return `<button 
         class="${baseClasses} ${inactiveClasses}"
-        hx-get="/api/v1/search?q=${encodeURIComponent(currentQuery)}&page=${pageNum}&limit=${ITEMS_PER_PAGE}"
+        hx-get="/api/v1/search?q=${encodeURIComponent(currentQuery)}&page=${pageNum}&per_page=${ITEMS_PER_PAGE}"
         hx-target="#results-container"
         onclick="goToPage(${pageNum})"
     >${pageNum}</button>`;
