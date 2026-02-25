@@ -65,17 +65,59 @@
                 {% endfor %}
             </div>
         </div>
+        
+        <!-- Pagination -->
+        <div id="pagination" class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4" style="display: none;">
+            <!-- Info -->
+            <div class="text-sm text-slate-600" id="pagination-info">
+                Показано <span id="showing-from">0</span>-<span id="showing-to">0</span> из <span id="total-count">0</span> книг
+            </div>
+            
+            <!-- Page Controls -->
+            <div class="flex items-center gap-2" id="pagination-controls">
+                <!-- Previous Button -->
+                <button id="btn-prev" 
+                        class="px-3 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-1">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Назад</span>
+                </button>
+                
+                <!-- Page Numbers -->
+                <div id="page-numbers" class="flex items-center gap-1">
+                    <!-- Dynamically populated -->
+                </div>
+                
+                <!-- Next Button -->
+                <button id="btn-next" 
+                        class="px-3 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-1">
+                    <span class="hidden sm:inline">Вперёд</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// Pagination state
+const ITEMS_PER_PAGE = 20;
+let currentPage = 1;
+let totalPages = 1;
+let totalItems = 0;
+let currentQuery = '';
+
 // Load search results on page load
 document.addEventListener('DOMContentLoaded', function() {
     const query = document.getElementById('search-input').value;
+    // Get page from URL if present
+    const urlParams = new URLSearchParams(window.location.search);
+    currentPage = parseInt(urlParams.get('page')) || 1;
+    
     if (query) {
-        loadSearchResults(query);
+        currentQuery = query;
+        loadSearchResults(query, currentPage);
     }
 });
 
@@ -84,29 +126,48 @@ function performSearch(event) {
     event.preventDefault();
     const query = document.getElementById('search-input').value;
     if (query) {
+        // Reset to first page on new search
+        currentPage = 1;
+        currentQuery = query;
+        
         // Update URL without reload
         const url = new URL(window.location);
         url.searchParams.set('q', query);
+        url.searchParams.delete('page');
         window.history.pushState({}, '', url);
         
         // Update display
         document.getElementById('search-query').textContent = query;
         document.getElementById('results-count').textContent = 'Загрузка результатов...';
         document.getElementById('results-container').innerHTML = document.getElementById('loading-skeleton').innerHTML;
+        document.getElementById('pagination').style.display = 'none';
         
         // Load results
-        loadSearchResults(query);
+        loadSearchResults(query, 1);
     }
     return false;
 }
 
 // Load search results from API
-async function loadSearchResults(query) {
+async function loadSearchResults(query, page = 1) {
     try {
-        const response = await fetch(`/api/v1/search?q=${encodeURIComponent(query)}`);
+        const response = await fetch(`/api/v1/search?q=${encodeURIComponent(query)}&page=${page}&limit=${ITEMS_PER_PAGE}`);
         const data = await response.json();
         
+        // Update pagination state
+        totalItems = data.total || 0;
+        totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+        currentPage = page;
+        
         document.getElementById('results-count').textContent = `Найдено: ${data.total} книг`;
+        
+        // Show/hide pagination
+        if (totalItems > ITEMS_PER_PAGE) {
+            document.getElementById('pagination').style.display = 'flex';
+            renderPagination();
+        } else {
+            document.getElementById('pagination').style.display = 'none';
+        }
         
         if (data.results && data.results.length > 0) {
             const html = data.results.map(book => `
@@ -221,6 +282,7 @@ async function showSuggestions(query) {
 function selectSuggestion(text) {
     document.getElementById('search-input').value = text;
     document.getElementById('suggestions').classList.add('hidden');
+    currentPage = 1; // Reset pagination
     performSearch({ preventDefault: () => {} });
 }
 
@@ -232,6 +294,123 @@ document.addEventListener('click', function(e) {
         suggestionsDiv.classList.add('hidden');
     }
 });
+
+// Render pagination controls
+function renderPagination() {
+    const fromItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+    const toItem = Math.min(currentPage * ITEMS_PER_PAGE, totalItems);
+    
+    // Update info text
+    document.getElementById('showing-from').textContent = fromItem;
+    document.getElementById('showing-to').textContent = toItem;
+    document.getElementById('total-count').textContent = totalItems;
+    
+    // Update prev/next buttons with HTMX
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    
+    btnPrev.disabled = currentPage <= 1;
+    btnNext.disabled = currentPage >= totalPages;
+    
+    // Setup HTMX attributes for prev button
+    if (currentPage > 1) {
+        btnPrev.setAttribute('hx-get', `/api/v1/search?q=${encodeURIComponent(currentQuery)}&page=${currentPage - 1}&limit=${ITEMS_PER_PAGE}`);
+        btnPrev.setAttribute('hx-target', '#results-container');
+        btnPrev.onclick = () => {
+            loadSearchResults(currentQuery, currentPage - 1);
+            updateUrlPage(currentPage - 1);
+        };
+    }
+    
+    // Setup HTMX attributes for next button
+    if (currentPage < totalPages) {
+        btnNext.setAttribute('hx-get', `/api/v1/search?q=${encodeURIComponent(currentQuery)}&page=${currentPage + 1}&limit=${ITEMS_PER_PAGE}`);
+        btnNext.setAttribute('hx-target', '#results-container');
+        btnNext.onclick = () => {
+            loadSearchResults(currentQuery, currentPage + 1);
+            updateUrlPage(currentPage + 1);
+        };
+    }
+    
+    // Render page numbers
+    const pageNumbersDiv = document.getElementById('page-numbers');
+    pageNumbersDiv.innerHTML = generatePageNumbers();
+    
+    // Re-initialize icons
+    lucide.createIcons();
+}
+
+// Generate page number buttons HTML
+function generatePageNumbers() {
+    const pages = [];
+    const maxVisible = 5;
+    
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    
+    if (endPage - startPage + 1 < maxVisible) {
+        startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+    
+    // First page + ellipsis if needed
+    if (startPage > 1) {
+        pages.push(createPageButton(1));
+        if (startPage > 2) {
+            pages.push('<span class="px-2 text-slate-400">...</span>');
+        }
+    }
+    
+    // Visible page numbers
+    for (let i = startPage; i <= endPage; i++) {
+        pages.push(createPageButton(i));
+    }
+    
+    // Last page + ellipsis if needed
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            pages.push('<span class="px-2 text-slate-400">...</span>');
+        }
+        pages.push(createPageButton(totalPages));
+    }
+    
+    return pages.join('');
+}
+
+// Create a page number button HTML
+function createPageButton(pageNum) {
+    const isActive = pageNum === currentPage;
+    const baseClasses = 'w-10 h-10 rounded-lg text-sm font-medium transition flex items-center justify-center';
+    const activeClasses = 'bg-blue-600 text-white';
+    const inactiveClasses = 'text-slate-600 hover:bg-slate-100 border border-slate-300';
+    
+    if (isActive) {
+        return `<button class="${baseClasses} ${activeClasses}" disabled>${pageNum}</button>`;
+    }
+    
+    return `<button 
+        class="${baseClasses} ${inactiveClasses}"
+        hx-get="/api/v1/search?q=${encodeURIComponent(currentQuery)}&page=${pageNum}&limit=${ITEMS_PER_PAGE}"
+        hx-target="#results-container"
+        onclick="goToPage(${pageNum})"
+    >${pageNum}</button>`;
+}
+
+// Navigate to specific page
+function goToPage(pageNum) {
+    loadSearchResults(currentQuery, pageNum);
+    updateUrlPage(pageNum);
+}
+
+// Update URL page parameter
+function updateUrlPage(page) {
+    const url = new URL(window.location);
+    if (page > 1) {
+        url.searchParams.set('page', page);
+    } else {
+        url.searchParams.delete('page');
+    }
+    window.history.pushState({}, '', url);
+}
 
 // Escape HTML to prevent XSS
 function escapeHtml(text) {

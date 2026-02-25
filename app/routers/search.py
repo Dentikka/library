@@ -14,16 +14,19 @@ router = APIRouter(prefix="/api/v1/search", tags=["search"])
 async def search_books(
     q: str = Query(..., min_length=1, description="Search query"),
     library_id: Optional[int] = Query(None, description="Filter by library ID"),
+    page: int = Query(1, ge=1, description="Page number"),
+    per_page: int = Query(20, ge=1, le=100, description="Items per page"),
     db: AsyncSession = Depends(get_db)
 ):
     """
     Search books by title or author name.
     Supports filtering by library (to show only books available there).
+    Supports pagination.
     """
     query = q.strip()
     
     # Build base query with joins
-    stmt = (
+    base_stmt = (
         select(
             Book.id,
             Book.title,
@@ -38,7 +41,7 @@ async def search_books(
     
     # Apply library filter if specified
     if library_id:
-        stmt = stmt.filter(Copy.library_id == library_id)
+        base_stmt = base_stmt.filter(Copy.library_id == library_id)
     
     # Search in title or author name (case-insensitive for both ASCII and Cyrillic)
     # Using multiple patterns for case variations due to SQLite unicode limitations
@@ -53,7 +56,7 @@ async def search_books(
     title_conditions = [Book.title.like(p) for p in search_patterns]
     author_conditions = [Author.name.like(p) for p in search_patterns]
     
-    stmt = stmt.filter(
+    base_stmt = base_stmt.filter(
         or_(
             or_(*title_conditions),
             or_(*author_conditions)
@@ -61,10 +64,15 @@ async def search_books(
     )
     
     # Group by book and author
-    stmt = stmt.group_by(Book.id, Book.title, Author.name, Book.year)
+    base_stmt = base_stmt.group_by(Book.id, Book.title, Author.name, Book.year)
     
-    # Order by title
-    stmt = stmt.order_by(Book.title)
+    # Count total results before pagination
+    count_stmt = select(func.count()).select_from(base_stmt.subquery())
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar() or 0
+    
+    # Apply pagination: order, limit, offset
+    stmt = base_stmt.order_by(Book.title).limit(per_page).offset((page - 1) * per_page)
     
     result = await db.execute(stmt)
     rows = result.all()
@@ -82,9 +90,15 @@ async def search_books(
         for row in rows
     ]
     
+    # Calculate total pages
+    pages = (total + per_page - 1) // per_page
+    
     return SearchResponse(
         query=query,
-        total=len(results),
+        total=total,
+        page=page,
+        per_page=per_page,
+        pages=pages,
         results=results
     )
 
@@ -157,13 +171,16 @@ async def advanced_search(
     year_to: Optional[int] = Query(None, description="Year to"),
     library_id: Optional[int] = Query(None, description="Filter by library"),
     available_only: bool = Query(False, description="Only available books"),
+    page: int = Query(1, ge=1, description="Page number"),
+    per_page: int = Query(20, ge=1, le=100, description="Items per page"),
     db: AsyncSession = Depends(get_db)
 ):
     """
     Advanced search with multiple filters.
+    Supports pagination.
     """
     # Build base query
-    stmt = (
+    base_stmt = (
         select(
             Book.id,
             Book.title,
@@ -197,11 +214,18 @@ async def advanced_search(
         filters.append(Copy.library_id == library_id)
     
     if filters:
-        stmt = stmt.filter(and_(*filters))
+        base_stmt = base_stmt.filter(and_(*filters))
     
-    # Group and order
-    stmt = stmt.group_by(Book.id, Book.title, Author.name, Book.year)
-    stmt = stmt.order_by(Book.title)
+    # Group by book and author
+    base_stmt = base_stmt.group_by(Book.id, Book.title, Author.name, Book.year)
+    
+    # Count total results before filtering by availability
+    count_stmt = select(func.count()).select_from(base_stmt.subquery())
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar() or 0
+    
+    # Apply pagination
+    stmt = base_stmt.order_by(Book.title).limit(per_page).offset((page - 1) * per_page)
     
     result = await db.execute(stmt)
     rows = result.all()
@@ -223,8 +247,14 @@ async def advanced_search(
             )
         )
     
+    # Calculate total pages
+    pages = (total + per_page - 1) // per_page
+    
     return SearchResponse(
         query=f"title={title}, author={author}",
-        total=len(results),
+        total=total,
+        page=page,
+        per_page=per_page,
+        pages=pages,
         results=results
     )

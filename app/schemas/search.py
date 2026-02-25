@@ -14,6 +14,9 @@ class SearchResult(BaseModel):
 class SearchResponse(BaseModel):
     query: str
     total: int
+    page: int
+    per_page: int
+    pages: int
     results: List[SearchResult]
 
 
