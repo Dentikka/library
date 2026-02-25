@@ -6,6 +6,11 @@ from contextlib import asynccontextmanager
 
 from app.database import engine, Base
 from app.routers import auth, libraries, books, search, authors
+from app.config import validate_critical_settings
+
+# Валидация критических настроек при импорте модуля
+# Вызывает ошибку с понятным сообщением если SECRET_KEY или DATABASE_URL не заданы
+validate_critical_settings()
 
 
 @asynccontextmanager
