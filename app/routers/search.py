@@ -40,24 +40,31 @@ async def search_books(
     if library_id:
         stmt = stmt.filter(Copy.library_id == library_id)
     
-    # Search in title or author name (case-insensitive)
-    search_pattern = f"%{query}%"
+    # Search in title or author name (case-insensitive for both ASCII and Cyrillic)
+    # Using multiple patterns for case variations due to SQLite unicode limitations
+    search_patterns = [
+        f"%{query}%",          # original case
+        f"%{query.lower()}%",  # lowercase
+        f"%{query.upper()}%",  # uppercase
+        f"%{query.capitalize()}%",  # capitalized
+    ]
+    
+    # Build OR conditions for all case variations
+    title_conditions = [Book.title.like(p) for p in search_patterns]
+    author_conditions = [Author.name.like(p) for p in search_patterns]
+    
     stmt = stmt.filter(
         or_(
-            Book.title.ilike(search_pattern),
-            Author.name.ilike(search_pattern)
+            or_(*title_conditions),
+            or_(*author_conditions)
         )
     )
     
     # Group by book and author
     stmt = stmt.group_by(Book.id, Book.title, Author.name, Book.year)
     
-    # Order by relevance (title match first, then author match)
-    stmt = stmt.order_by(
-        Book.title.ilike(f"%{query}%").desc(),
-        Author.name.ilike(f"%{query}%").desc(),
-        Book.title
-    )
+    # Order by title
+    stmt = stmt.order_by(Book.title)
     
     result = await db.execute(stmt)
     rows = result.all()
@@ -95,17 +102,21 @@ async def get_suggestions(
     query = q.strip()
     search_pattern = f"%{query}%"
     
-    # Get matching book titles
+    # Get matching book titles (case-insensitive for Cyrillic)
+    search_patterns = [f"%{query}%", f"%{query.lower()}%", f"%{query.upper()}%", f"%{query.capitalize()}%"]
+    book_conditions = [Book.title.like(p) for p in search_patterns]
+    author_conditions = [Author.name.like(p) for p in search_patterns]
+    
     book_stmt = (
         select(Book.title)
-        .filter(Book.title.ilike(search_pattern))
+        .filter(or_(*book_conditions))
         .limit(limit)
     )
     
     # Get matching author names
     author_stmt = (
         select(Author.name)
-        .filter(Author.name.ilike(search_pattern))
+        .filter(or_(*author_conditions))
         .limit(limit)
     )
     
@@ -169,10 +180,12 @@ async def advanced_search(
     filters = []
     
     if title:
-        filters.append(Book.title.ilike(f"%{title}%"))
+        title_patterns = [f"%{title}%", f"%{title.lower()}%", f"%{title.upper()}%", f"%{title.capitalize()}%"]
+        filters.append(or_(*[Book.title.like(p) for p in title_patterns]))
     
     if author:
-        filters.append(Author.name.ilike(f"%{author}%"))
+        author_patterns = [f"%{author}%", f"%{author.lower()}%", f"%{author.upper()}%", f"%{author.capitalize()}%"]
+        filters.append(or_(*[Author.name.like(p) for p in author_patterns]))
     
     if year_from:
         filters.append(Book.year >= year_from)
