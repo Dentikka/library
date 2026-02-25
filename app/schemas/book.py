@@ -36,6 +36,7 @@ class BookResponse(BookInDB):
     author_name: Optional[str] = None
     available_count: int = 0
     total_count: int = 0
+    cover_url: Optional[str] = None
 
 
 class BookDetailResponse(BookResponse):

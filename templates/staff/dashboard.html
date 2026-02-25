@@ -18,6 +18,55 @@
     
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        /* Mobile optimizations */
+        @media (max-width: 640px) {
+            .max-w-7xl { max-width: 100%; }
+            
+            /* Make table scrollable horizontally */
+            .overflow-x-auto {
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Smaller padding on mobile */
+            .px-4 { padding-left: 0.75rem; !important; padding-right: 0.75rem !important; }
+            
+            /* Sidebar full width on mobile */
+            aside.w-full { margin-bottom: 1rem; }
+            
+            /* Modal adjustments */
+            #book-modal > div {
+                margin: 0.5rem;
+                max-height: 95vh;
+            }
+            
+            /* Smaller text in table */
+            table { font-size: 0.875rem; }
+            th, td { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+            
+            /* Action buttons more compact */
+            td:last-child a, td:last-child button {
+                margin-right: 0.5rem !important;
+            }
+        }
+        
+        /* Prevent horizontal scroll on body */
+        body { overflow-x: hidden; }
+        
+        /* Touch-friendly tap targets */
+        button, a { min-height: 44px; }
+        
+        /* Better scrolling for tables */
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 6px;
+        }
+        .overflow-x-auto::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -113,7 +162,8 @@
                     
                     <!-- Books Table -->
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                        <table class="w-full">
+                        <div class="overflow-x-auto">
+                        <table class="w-full min-w-[600px]">
                             <thead class="bg-slate-50">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">ID</th>
@@ -128,6 +178,7 @@
                                 <!-- Populated by JS -->
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 </section>
                 
@@ -310,7 +361,13 @@
             document.getElementById('modal-title').textContent = 'Добавить книгу';
             document.getElementById('book-form').reset();
             populateAuthorSelect();
+            resetCoverSection();
+            // Disable cover upload until book is created
+            document.getElementById('cover-input').disabled = true;
+            document.querySelector('#cover-section label').classList.add('opacity-50', 'cursor-not-allowed');
+            document.querySelector('#cover-section p.text-xs').textContent = 'Сначала сохраните книгу, чтобы загрузить обложку';
             document.getElementById('book-modal').classList.remove('hidden');
+            lucide.createIcons();
         }
         
         // Open modal for editing book
@@ -332,7 +389,17 @@
                 document.getElementById('book-year').value = book.year || '';
                 document.getElementById('book-description').value = book.description || '';
                 
+                // Enable cover upload and reset section
+                resetCoverSection();
+                document.getElementById('cover-input').disabled = false;
+                document.querySelector('#cover-section label').classList.remove('opacity-50', 'cursor-not-allowed');
+                document.querySelector('#cover-section p.text-xs').textContent = 'Максимальный размер: 5MB. Рекомендуемый размер: 400x600px';
+                
+                // Load existing cover
+                await loadExistingCover(bookId);
+                
                 document.getElementById('book-modal').classList.remove('hidden');
+                lucide.createIcons();
             } catch (error) {
                 console.error('Error loading book:', error);
                 alert('Ошибка загрузки книги');
@@ -385,8 +452,21 @@
                 });
                 
                 if (response.ok) {
-                    closeBookModal();
-                    loadBooks();
+                    const result = await response.json();
+                    
+                    // If creating new book, enable cover upload for the new book
+                    if (!currentEditingBookId && result.id) {
+                        currentEditingBookId = result.id;
+                        document.getElementById('modal-title').textContent = 'Редактировать книгу';
+                        document.getElementById('cover-input').disabled = false;
+                        document.querySelector('#cover-section label').classList.remove('opacity-50', 'cursor-not-allowed');
+                        document.querySelector('#cover-section p.text-xs').textContent = 'Максимальный размер: 5MB. Рекомендуемый размер: 400x600px';
+                        alert('Книга создана! Теперь можно загрузить обложку.');
+                        lucide.createIcons();
+                    } else {
+                        closeBookModal();
+                        loadBooks();
+                    }
                 } else {
                     const error = await response.json();
                     alert(error.detail || 'Ошибка сохранения');
@@ -439,6 +519,142 @@
         // Initialize
         loadAuthors();
         lucide.createIcons();
+        
+        // Cover upload variables
+        let selectedCoverFile = null;
+        let currentBookCoverUrl = null;
+        
+        // Handle cover file selection
+        function handleCoverSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            // Validate file size (5MB limit)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Файл слишком большой. Максимальный размер: 5MB');
+                input.value = '';
+                return;
+            }
+            
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                alert('Неподдерживаемый формат. Используйте JPG, PNG или WEBP');
+                input.value = '';
+                return;
+            }
+            
+            selectedCoverFile = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('cover-preview').src = e.target.result;
+                document.getElementById('cover-preview-container').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+            
+            // Update filename display
+            document.getElementById('cover-filename').textContent = file.name;
+            
+            // Enable upload button
+            document.getElementById('upload-cover-btn').disabled = false;
+            
+            lucide.createIcons();
+        }
+        
+        // Upload cover to server
+        async function uploadCover() {
+            if (!selectedCoverFile || !currentEditingBookId) {
+                alert('Выберите файл и убедитесь, что книга сохранена');
+                return;
+            }
+            
+            const token = localStorage.getItem('access_token');
+            const formData = new FormData();
+            formData.append('file', selectedCoverFile);
+            
+            const btn = document.getElementById('upload-cover-btn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin inline"></i> Загрузка...';
+            lucide.createIcons();
+            
+            try {
+                const response = await fetch(`/api/v1/books/${currentEditingBookId}/cover`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentBookCoverUrl = data.cover_url;
+                    
+                    // Update preview with server URL (with cache bust)
+                    document.getElementById('cover-preview').src = currentBookCoverUrl + '?t=' + Date.now();
+                    
+                    // Reset file input
+                    selectedCoverFile = null;
+                    document.getElementById('cover-input').value = '';
+                    document.getElementById('cover-filename').textContent = 'Выберите файл (JPG, PNG, WEBP)';
+                    btn.disabled = true;
+                    
+                    alert('Обложка успешно загружена!');
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Ошибка загрузки обложки');
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Ошибка загрузки обложки');
+                btn.disabled = false;
+            }
+            
+            btn.innerHTML = originalText;
+            lucide.createIcons();
+        }
+        
+        // Remove cover preview
+        function removeCover() {
+            selectedCoverFile = null;
+            document.getElementById('cover-input').value = '';
+            document.getElementById('cover-preview-container').classList.add('hidden');
+            document.getElementById('cover-filename').textContent = 'Выберите файл (JPG, PNG, WEBP)';
+            document.getElementById('upload-cover-btn').disabled = true;
+        }
+        
+        // Reset cover section when opening modal
+        function resetCoverSection() {
+            selectedCoverFile = null;
+            currentBookCoverUrl = null;
+            document.getElementById('cover-input').value = '';
+            document.getElementById('cover-preview-container').classList.add('hidden');
+            document.getElementById('cover-filename').textContent = 'Выберите файл (JPG, PNG, WEBP)';
+            document.getElementById('upload-cover-btn').disabled = true;
+        }
+        
+        // Load existing cover when editing
+        async function loadExistingCover(bookId) {
+            const token = localStorage.getItem('access_token');
+            try {
+                const response = await fetch(`/api/v1/books/${bookId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const book = await response.json();
+                
+                if (book.cover_url) {
+                    currentBookCoverUrl = book.cover_url;
+                    document.getElementById('cover-preview').src = book.cover_url;
+                    document.getElementById('cover-preview-container').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error loading cover:', error);
+            }
+        }
     </script>
     
     <!-- Book Modal -->
@@ -487,6 +703,39 @@
                     <textarea id="book-description" rows="3"
                         class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
                         placeholder="Краткое описание книги..."></textarea>
+                </div>
+                
+                <!-- Cover Upload Section -->
+                <div id="cover-section" class="border-t border-slate-200 pt-4">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Обложка книги</label>
+                    
+                    <!-- Cover Preview -->
+                    <div id="cover-preview-container" class="mb-3 hidden">
+                        <div class="relative inline-block">
+                            <img id="cover-preview" src="" alt="Обложка" class="w-32 h-44 object-cover rounded-lg shadow-sm border border-slate-200">
+                            <button type="button" onclick="removeCover()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition shadow-sm">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Upload Controls -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <label class="flex-1">
+                            <input type="file" id="cover-input" accept="image/jpeg,image/jpg,image/png,image/webp" 
+                                class="hidden" onchange="handleCoverSelect(this)">
+                            <span class="flex items-center justify-center gap-2 w-full px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg cursor-pointer transition border border-slate-300 border-dashed">
+                                <i data-lucide="upload" class="w-5 h-5"></i>
+                                <span id="cover-filename">Выберите файл (JPG, PNG, WEBP)</span>
+                            </span>
+                        </label>
+                        <button type="button" id="upload-cover-btn" onclick="uploadCover()" disabled
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg transition flex items-center justify-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            <span>Загрузить</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">Максимальный размер: 5MB. Рекомендуемый размер: 400x600px</p>
                 </div>
                 
                 <div class="flex justify-end space-x-3 pt-4">

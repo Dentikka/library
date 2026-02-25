@@ -1,4 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+import os
+import shutil
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, delete
 from sqlalchemy.orm import selectinload
@@ -11,6 +15,12 @@ from app.schemas.book import (
     BookCreate, BookUpdate, BookResponse, BookDetailResponse,
     CopyCreate, CopyUpdate, CopyResponse
 )
+
+# Constants for cover upload
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+UPLOAD_DIR = Path("uploads/covers")
 
 router = APIRouter(prefix="/api/v1/books", tags=["books"])
 
@@ -33,6 +43,7 @@ async def list_books(
             Book.isbn,
             Book.year,
             Book.description,
+            Book.cover_url,
             Book.created_at,
             Book.updated_at,
             Author.name.label("author_name"),
@@ -64,6 +75,7 @@ async def list_books(
             isbn=row.isbn,
             year=row.year,
             description=row.description,
+            cover_url=row.cover_url,
             created_at=row.created_at,
             updated_at=row.updated_at,
             author_name=row.author_name,
@@ -127,6 +139,7 @@ async def get_book(
         isbn=book.isbn,
         year=book.year,
         description=book.description,
+        cover_url=book.cover_url,
         created_at=book.created_at,
         updated_at=book.updated_at,
         author_name=author_name,
@@ -186,6 +199,7 @@ async def create_book(
         isbn=book_row.Book.isbn,
         year=book_row.Book.year,
         description=book_row.Book.description,
+        cover_url=book_row.Book.cover_url,
         created_at=book_row.Book.created_at,
         updated_at=book_row.Book.updated_at,
         author_name=book_row.author_name,
@@ -249,6 +263,113 @@ async def delete_book(
     await db.delete(book)
     await db.commit()
     return None
+
+
+@router.post("/{book_id}/cover", response_model=BookResponse)
+async def upload_book_cover(
+    book_id: int,
+    cover: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_active_staff)
+):
+    """Upload book cover image (staff only).
+    
+    Supported formats: jpg, jpeg, png, webp
+    Max file size: 5MB
+    """
+    # Check if book exists
+    result = await db.execute(
+        select(Book).filter(Book.id == book_id)
+    )
+    book = result.scalar_one_or_none()
+    
+    if not book:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Book not found"
+        )
+    
+    # Validate file extension
+    file_ext = Path(cover.filename).suffix.lower()
+    if file_ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid file format. Allowed formats: {', '.join(ALLOWED_EXTENSIONS)}"
+        )
+    
+    # Validate content type
+    if cover.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid content type. Allowed types: {', '.join(ALLOWED_IMAGE_TYPES)}"
+        )
+    
+    # Read file content to check size
+    content = await cover.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File size exceeds maximum allowed size of 5MB"
+        )
+    
+    # Ensure upload directory exists
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    
+    # Delete old cover if exists
+    if book.cover_url:
+        old_path = Path(book.cover_url.lstrip('/'))
+        if old_path.exists():
+            old_path.unlink()
+    
+    # Save new cover file
+    filename = f"{book_id}{file_ext}"
+    file_path = UPLOAD_DIR / filename
+    
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    # Update book record
+    book.cover_url = f"/uploads/covers/{filename}"
+    await db.commit()
+    await db.refresh(book)
+    
+    # Get full response with counts
+    result = await db.execute(
+        select(
+            Book.id,
+            Book.title,
+            Book.author_id,
+            Book.isbn,
+            Book.year,
+            Book.description,
+            Book.cover_url,
+            Book.created_at,
+            Book.updated_at,
+            Author.name.label("author_name"),
+            func.count(Copy.id).label("total_count"),
+            func.count(Copy.id).filter(Copy.status == "available").label("available_count")
+        )
+        .join(Author, Book.author_id == Author.id)
+        .outerjoin(Copy, Book.id == Copy.book_id)
+        .filter(Book.id == book_id)
+        .group_by(Book.id, Author.name)
+    )
+    row = result.first()
+    
+    return BookResponse(
+        id=row.id,
+        title=row.title,
+        author_id=row.author_id,
+        isbn=row.isbn,
+        year=row.year,
+        description=row.description,
+        cover_url=row.cover_url,
+        created_at=row.created_at,
+        updated_at=row.updated_at,
+        author_name=row.author_name,
+        total_count=row.total_count or 0,
+        available_count=row.available_count or 0
+    )
 
 
 # Copy management endpoints

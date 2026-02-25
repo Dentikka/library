@@ -34,6 +34,7 @@ app.include_router(authors.router)
 
 # Static files and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 templates = Jinja2Templates(directory="templates")
 
 

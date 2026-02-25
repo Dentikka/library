@@ -29,6 +29,36 @@
         .suggestion-item:hover {
             background-color: #f1f5f9;
         }
+        
+        /* Mobile optimizations */
+        @media (max-width: 640px) {
+            /* Smaller padding on mobile */
+            .max-w-6xl { max-width: 100%; }
+            
+            /* Ensure no horizontal scroll */
+            body { overflow-x: hidden; }
+            
+            /* Touch-friendly tap targets */
+            a, button { min-height: 44px; display: inline-flex; align-items: center; }
+            
+            /* Better font sizes on small screens */
+            h1 { font-size: 1.125rem !important; }
+            h2 { font-size: 1.5rem !important; }
+            h3 { font-size: 1.125rem !important; }
+            
+            /* Stack footer columns on mobile */
+            footer .grid { gap: 1.5rem; }
+        }
+        
+        /* Prevent zoom on iOS input focus */
+        input, select, textarea { font-size: 16px; }
+        
+        /* Better tap highlights on mobile */
+        @media (hover: none) {
+            a:active, button:active {
+                opacity: 0.7;
+            }
+        }
     </style>
     
     {% block extra_head %}{% endblock %}
@@ -57,7 +87,7 @@
                 </nav>
                 
                 <!-- Staff Login -->
-                <a href="/staff/login" class="flex items-center space-x-2 text-slate-600 hover:text-blue-700 font-medium transition">
+                <a href="/staff/login" class="flex items-center space-x-2 text-slate-600 hover:text-blue-700 font-medium transition p-2 sm:p-0">
                     <i data-lucide="user" class="w-5 h-5"></i>
                     <span class="hidden sm:inline">Вход для сотрудников</span>
                 </a>
