@@ -346,6 +346,15 @@
                 activeLink.classList.add('bg-blue-50', 'text-blue-700');
                 activeLink.classList.remove('text-slate-700');
             }
+            
+            // Load data for the section
+            if (section === 'authors') {
+                loadAuthorsList();
+            } else if (section === 'libraries') {
+                loadLibrariesList();
+            } else if (section === 'copies') {
+                loadBooksWithCopies();
+            }
         }
         
         function loadBooks() {
@@ -394,6 +403,7 @@
         
         // Authors cache
         let authorsList = [];
+        let librariesList = [];
         let currentEditingBookId = null;
         
         // Load authors for select
@@ -408,6 +418,235 @@
                 console.error('Error loading authors:', error);
             }
         }
+        
+        // Load all authors for the Authors section
+        async function loadAuthorsList() {
+            const token = localStorage.getItem('access_token');
+            try {
+                const response = await fetch('/api/v1/authors', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const authors = await response.json();
+                const tbody = document.getElementById('authors-table-body');
+                tbody.innerHTML = authors.map(author => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-6 py-4 text-sm text-slate-500">${author.id}</td>
+                        <td class="px-6 py-4">
+                            <p class="font-medium text-slate-900">${author.name}</p>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="editAuthor(${author.id}, '${author.name}')" class="text-slate-400 hover:text-blue-600 mr-3" title="Редактировать">
+                                <i data-lucide="edit" class="w-5 h-5 inline"></i>
+                            </button>
+                            <button onclick="deleteAuthor(${author.id})" class="text-red-400 hover:text-red-600" title="Удалить">
+                                <i data-lucide="trash-2" class="w-5 h-5 inline"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Error loading authors list:', error);
+            }
+        }
+        
+        // Load libraries for the Libraries section
+        async function loadLibrariesList() {
+            const token = localStorage.getItem('access_token');
+            try {
+                const response = await fetch('/api/v1/libraries', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                librariesList = await response.json();
+                const container = document.getElementById('libraries-container');
+                container.innerHTML = librariesList.map(lib => `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
+                        <div class="flex items-start gap-4">
+                            <div class="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="building-2" class="w-6 h-6 text-blue-700"></i>
+                            </div>
+                            <div class="flex-grow">
+                                <h3 class="font-semibold text-slate-900">${lib.name}</h3>
+                                <p class="text-sm text-slate-600 mt-1">${lib.address}</p>
+                                <div class="flex items-center gap-4 mt-3 text-sm text-slate-500">
+                                    <span class="flex items-center gap-1">
+                                        <i data-lucide="phone" class="w-4 h-4"></i>
+                                        ${lib.phone || '-'}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-2">${lib.work_hours || ''}</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="editLibrary(${lib.id})" class="text-slate-400 hover:text-blue-600" title="Редактировать">
+                                    <i data-lucide="edit" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Error loading libraries list:', error);
+            }
+        }
+        
+        // Load books with copies for the Copies section
+        async function loadBooksWithCopies() {
+            const token = localStorage.getItem('access_token');
+            try {
+                // First load books
+                const booksResponse = await fetch('/api/v1/books?limit=20', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const books = await booksResponse.json();
+                
+                // Load libraries for reference
+                const libsResponse = await fetch('/api/v1/libraries', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const libs = await libsResponse.json();
+                const libMap = {};
+                libs.forEach(l => libMap[l.id] = l.name);
+                
+                // For each book, load its copies
+                const container = document.getElementById('copies-container');
+                container.innerHTML = '<div class="text-center py-8 text-slate-500">Загрузка экземпляров...</div>';
+                
+                let html = '';
+                for (const book of books) {
+                    try {
+                        const copiesResponse = await fetch(`/api/v1/books/${book.id}/copies`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const copies = await copiesResponse.json();
+                        
+                        if (copies.length > 0) {
+                            html += `
+                                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                    <div class="p-4 bg-slate-50 border-b border-slate-200">
+                                        <div class="flex justify-between items-center">
+                                            <div>
+                                                <h3 class="font-semibold text-slate-900">${book.title}</h3>
+                                                <p class="text-sm text-slate-600">${book.author_name || '-'}</p>
+                                            </div>
+                                            <button onclick="openAddCopyModal(${book.id})" class="text-blue-700 hover:text-blue-800 text-sm font-medium">
+                                                + Добавить экземпляр
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full">
+                                            <thead class="bg-slate-50">
+                                                <tr>
+                                                    <th class="px-4 py-2 text-left text-xs font-semibold text-slate-500">ID</th>
+                                                    <th class="px-4 py-2 text-left text-xs font-semibold text-slate-500">Инв. номер</th>
+                                                    <th class="px-4 py-2 text-left text-xs font-semibold text-slate-500">Библиотека</th>
+                                                    <th class="px-4 py-2 text-left text-xs font-semibold text-slate-500">Статус</th>
+                                                    <th class="px-4 py-2 text-right text-xs font-semibold text-slate-500">Действия</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-200">
+                                                ${copies.map(copy => `
+                                                    <tr class="hover:bg-slate-50">
+                                                        <td class="px-4 py-2 text-sm text-slate-500">${copy.id}</td>
+                                                        <td class="px-4 py-2 text-sm font-medium text-slate-900">${copy.inventory_number || '-'}</td>
+                                                        <td class="px-4 py-2 text-sm text-slate-600">${copy.library_name || libMap[copy.library_id] || '-'}</td>
+                                                        <td class="px-4 py-2">
+                                                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${copy.status === 'available' ? 'text-green-700 bg-green-50' : copy.status === 'borrowed' ? 'text-orange-700 bg-orange-50' : 'text-red-700 bg-red-50'}">
+                                                                ${copy.status === 'available' ? 'Доступен' : copy.status === 'borrowed' ? 'Выдан' : 'Недоступен'}
+                                                            </span>
+                                                        </td>
+                                                        <td class="px-4 py-2 text-right">
+                                                            <button onclick="deleteCopy(${copy.id}, ${book.id})" class="text-red-400 hover:text-red-600" title="Удалить">
+                                                                <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    } catch (e) {
+                        console.error('Error loading copies for book', book.id, e);
+                    }
+                }
+                
+                if (html) {
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
+                                <i data-lucide="copy" class="w-8 h-8 text-slate-400"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-slate-900 mb-2">Нет экземпляров</h3>
+                            <p class="text-slate-600">Добавьте экземпляры книг через раздел "Книги"</p>
+                        </div>
+                    `;
+                }
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Error loading books with copies:', error);
+            }
+        }
+        
+        // Placeholder functions for CRUD operations
+        function openAddAuthorModal() { alert('Функция добавления автора будет реализована в API'); }
+        function editAuthor(id, name) { alert('Редактирование автора: ' + name); }
+        function deleteAuthor(id) { 
+            if (confirm('Удалить автора?')) {
+                alert('Удаление будет реализовано в API');
+            }
+        }
+        function openAddLibraryModal() { alert('Функция добавления библиотеки будет реализована в API'); }
+        function editLibrary(id) { alert('Редактирование библиотеки #' + id); }
+        function openAddCopyModal(bookId) { 
+            const libId = prompt('Введите ID библиотеки:');
+            if (libId) {
+                alert('Добавление экземпляра в библиотеку #' + libId + ' для книги #' + bookId);
+            }
+        }
+        function deleteCopy(copyId, bookId) { 
+            if (confirm('Удалить экземпляр?')) {
+                alert('Удаление будет реализовано в API');
+            }
+        }
+        
+        // Search functions
+        function searchAuthors() {
+            const query = document.getElementById('author-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#authors-table-body tr');
+            rows.forEach(row => {
+                const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                row.style.display = name.includes(query) ? '' : 'none';
+            });
+        }
+        
+        function searchLibraries() {
+            const query = document.getElementById('library-search').value.toLowerCase();
+            const cards = document.querySelectorAll('#libraries-container > div');
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+        
+        function searchCopies() {
+            const query = document.getElementById('copy-search').value.toLowerCase();
+            const sections = document.querySelectorAll('#copies-container > div');
+            sections.forEach(section => {
+                const text = section.textContent.toLowerCase();
+                section.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+        
+        // Setup search listeners
+        document.getElementById('author-search').addEventListener('input', searchAuthors);
+        document.getElementById('library-search').addEventListener('input', searchLibraries);
+        document.getElementById('copy-search').addEventListener('input', searchCopies);
         
         // Open modal for adding book
         async function openAddBookModal() {
