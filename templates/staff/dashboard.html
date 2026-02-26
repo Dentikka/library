@@ -369,13 +369,11 @@
             document.getElementById('book-form').reset();
             populateAuthorSelect();
             resetCoverSection();
-            document.getElementById('book-modal').classList.remove('hidden');
             console.log('Modal opened successfully');
             // Disable cover upload until book is created
             document.getElementById('cover-input').disabled = true;
             document.querySelector('#cover-section label').classList.add('opacity-50', 'cursor-not-allowed');
             document.querySelector('#cover-section p.text-xs').textContent = 'Сначала сохраните книгу, чтобы загрузить обложку';
-            document.getElementById('book-modal').classList.remove('hidden');
             lucide.createIcons();
         }
         
