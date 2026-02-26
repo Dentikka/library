@@ -32,6 +32,12 @@ def validate_critical_settings():
     переменные окружения не заданы.
     """
     import os
+    from dotenv import load_dotenv
+    
+    # Загружаем .env файл если он существует
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+    if os.path.exists(env_path):
+        load_dotenv(env_path)
     
     missing = []
     
