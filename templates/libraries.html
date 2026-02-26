@@ -2,6 +2,11 @@
 
 {% block title %}Библиотеки — ЦБС Вологды{% endblock %}
 
+{% block extra_head %}
+<!-- Yandex Maps API -->
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+{% endblock %}
+
 {% block content %}
 <!-- Page Header -->
 <section class="bg-gradient-to-b from-blue-50 to-slate-50 py-12">
@@ -11,86 +16,266 @@
         </h1>
         <p class="text-lg text-slate-600 max-w-2xl mx-auto">
             Централизованная библиотечная система объединяет 11 филиалов 
-            в разных районах города Вологды
+            в разных районах города Вологды и Вологодского района
+        </p>
+    </div>
+</section>
+
+<!-- Map Section -->
+<section class="py-8 bg-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold text-slate-900 mb-6">Карта расположения</h2>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div id="yandex-map" class="w-full h-[400px] md:h-[500px]"></div>
+        </div>
+        <p class="text-sm text-slate-500 mt-3 flex items-center gap-2">
+            <i data-lucide="info" class="w-4 h-4"></i>
+            Кликните на метку, чтобы увидеть адрес и режим работы библиотеки
         </p>
     </div>
 </section>
 
 <!-- Libraries List -->
-<section class="py-12 bg-white">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="libraries-list">
-            <!-- HTMX will populate this -->
-            <div class="col-span-full text-center py-12">
-                <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-4">
-                    <svg class="animate-spin h-6 w-6 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
-                <p class="text-slate-600">Загрузка списка библиотек...</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Map Section (placeholder) -->
 <section class="py-12 bg-slate-50">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-2xl font-bold text-slate-900 text-center mb-8">Карта расположения</h2>
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
-                <i data-lucide="map" class="w-8 h-8 text-slate-400"></i>
-            </div>
-            <p class="text-slate-600 mb-4">Карта с расположением библиотек будет добавлена позже</p>
-            <a href="https://cbs-vologda.ru/o-nas/najdi-svoyu-biblioteku.html" target="_blank" class="inline-flex items-center space-x-2 text-blue-700 hover:text-blue-800 font-medium">
-                <span>Смотреть на текущем сайте</span>
-                <i data-lucide="external-link" class="w-4 h-4"></i>
-            </a>
+        <h2 class="text-2xl font-bold text-slate-900 mb-8">Список филиалов</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="libraries-list">
+            <!-- Libraries loaded via API -->
         </div>
     </div>
 </section>
 
-<!-- Load Libraries with HTMX -->
+<!-- CTA Section -->
+<section class="py-12 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">
+            Не знаете, какая библиотека ближе?
+        </h2>
+        <p class="text-slate-600 mb-6">
+            Воспользуйтесь картой выше или свяжитесь с центральной библиотекой для консультации
+        </p>
+        <a href="tel:+78172723345" class="inline-flex items-center justify-center gap-2 bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-800 transition">
+            <i data-lucide="phone" class="w-5 h-5"></i>
+            Позвонить в ЦБС
+        </a>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    // Load libraries on page load
-    document.addEventListener('DOMContentLoaded', function() {
+    // Library data with coordinates
+    const librariesData = [
+        {
+            id: 1,
+            name: "Центр писателя В.И. Белова",
+            address: "ул. Пушкинская, 2",
+            phone: "(8172) 72-33-45",
+            hours: "Пн–Пт: 10:00–19:00, Сб: 10:00–18:00",
+            coords: [59.2206, 39.8884],
+            isCentral: true
+        },
+        {
+            id: 2,
+            name: "Библиотека на Панкратова",
+            address: "ул. Панкратова, 35",
+            phone: "(8172) 52-11-83",
+            hours: "Пн–Пт: 11:00–19:00, Сб: 11:00–17:00",
+            coords: [59.2095, 39.8652],
+            isCentral: false
+        },
+        {
+            id: 3,
+            name: "Библиотека на Добролюбова",
+            address: "ул. Добролюбова, 23",
+            phone: "(8172) 72-14-95",
+            hours: "Пн, Ср, Пт: 12:00–20:00, Сб: 10:00–18:00",
+            coords: [59.2183, 39.8767],
+            isCentral: false
+        },
+        {
+            id: 4,
+            name: "Библиотека на Чернышевского",
+            address: "ул. Чернышевского, 77",
+            phone: "(8172) 72-22-51",
+            hours: "Вт, Чт: 11:00–19:00, Сб: 10:00–17:00",
+            coords: [59.2041, 39.8713],
+            isCentral: false
+        },
+        {
+            id: 5,
+            name: "Библиотека в Лосте",
+            address: "п. Лоста, ул. Ленинградская, 8",
+            phone: "(8172) 56-71-15",
+            hours: "Вт, Чт, Пт: 11:00–18:00, Сб: 10:00–16:00",
+            coords: [59.1208, 40.0642],
+            isCentral: false
+        },
+        {
+            id: 6,
+            name: "Библиотека в Молочном",
+            address: "п. Молочное, ул. Школьная, 6",
+            phone: "(8172) 78-21-33",
+            hours: "Пн, Ср, Пт: 11:00–18:00, Сб: 10:00–16:00",
+            coords: [59.2854, 39.6758],
+            isCentral: false
+        },
+        {
+            id: 7,
+            name: "Библиотека на Пролетарской",
+            address: "ул. Пролетарская, 12",
+            phone: "(8172) 72-45-62",
+            hours: "Вт, Чт, Пт: 12:00–20:00, Сб: 10:00–18:00",
+            coords: [59.2147, 39.9025],
+            isCentral: false
+        },
+        {
+            id: 8,
+            name: "Библиотека на Авксентьевского",
+            address: "ул. Авксентьевского, 15",
+            phone: "(8172) 52-84-11",
+            hours: "Пн, Ср, Пт: 11:00–19:00, Сб: 10:00–17:00",
+            coords: [59.1972, 39.8891],
+            isCentral: false
+        },
+        {
+            id: 9,
+            name: "Библиотека на Трактористов (Бывалово)",
+            address: "ул. Трактористов, 18",
+            phone: "(8172) 53-12-44",
+            hours: "Вт, Чт: 11:00–19:00, Сб: 10:00–16:00",
+            coords: [59.1925, 39.8489],
+            isCentral: false
+        },
+        {
+            id: 10,
+            name: "Библиотека на Судоремонтной",
+            address: "ул. Судоремонтная, 5",
+            phone: "(8172) 54-31-77",
+            hours: "Пн, Ср, Пт: 11:00–19:00, Сб: 10:00–16:00",
+            coords: [59.2289, 39.8389],
+            isCentral: false
+        },
+        {
+            id: 11,
+            name: "Библиотека на Можайского",
+            address: "ул. Можайского, 25",
+            phone: "(8172) 72-63-98",
+            hours: "Вт, Чт, Пт: 12:00–20:00, Сб: 10:00–17:00",
+            coords: [59.2356, 39.8998],
+            isCentral: false
+        }
+    ];
+
+    // Render libraries list
+    function renderLibrariesList() {
         const container = document.getElementById('libraries-list');
-        
-        fetch('/api/v1/libraries')
-            .then(response => response.json())
-            .then(libraries => {
-                container.innerHTML = libraries.map(lib => `
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="bg-blue-100 p-3 rounded-lg">
-                                <i data-lucide="library" class="w-6 h-6 text-blue-700"></i>
-                            </div>
-                            ${lib.id === 1 ? '<span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded">Центральная</span>' : ''}
+        container.innerHTML = librariesData.map(lib => `
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition" id="library-${lib.id}">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i data-lucide="library" class="w-6 h-6 text-blue-700"></i>
                         </div>
-                        <h3 class="font-semibold text-slate-900 mb-2">${lib.name}</h3>
-                        <p class="text-sm text-slate-600 mb-3">${lib.address || 'Адрес не указан'}</p>
-                        ${lib.phone ? `<p class="text-sm text-slate-500 mb-2 flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4"></i>${lib.phone}</p>` : ''}
-                        ${lib.work_hours ? `<p class="text-sm text-slate-500 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i>${lib.work_hours}</p>` : ''}
+                        <div>
+                            <h3 class="font-semibold text-slate-900">${lib.name}</h3>
+                            ${lib.isCentral ? '<span class="inline-block mt-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded">Центральная</span>' : ''}
+                        </div>
                     </div>
-                `).join('');
-                
-                // Re-initialize icons
-                if (window.lucide) {
-                    lucide.createIcons();
-                }
-            })
-            .catch(error => {
-                container.innerHTML = `
-                    <div class="col-span-full text-center py-12">
+                    <button onclick="focusOnMap(${lib.id})" class="p-2 text-slate-400 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition" title="Показать на карте">
+                        <i data-lucide="map-pin" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <ul class="space-y-2 text-sm">
+                    <li class="flex items-start gap-2">
+                        <i data-lucide="navigation" class="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0"></i>
+                        <span class="text-slate-600">${lib.address}</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i data-lucide="phone" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+                        <a href="tel:${lib.phone.replace(/[^\d]/g, '')}" class="text-slate-600 hover:text-blue-700">${lib.phone}</a>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i data-lucide="clock" class="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0"></i>
+                        <span class="text-slate-600">${lib.hours}</span>
+                    </li>
+                </ul>
+            </div>
+        `).join('');
+        
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    // Yandex Maps
+    let yandexMap;
+    let yandexPlacemarks = [];
+
+    function initYandexMap() {
+        yandexMap = new ymaps.Map('yandex-map', {
+            center: [59.2206, 39.8884],
+            zoom: 11,
+            controls: ['zoomControl', 'searchControl', 'fullscreenControl']
+        });
+
+        // Add placemarks for all libraries
+        librariesData.forEach(lib => {
+            const placemark = new ymaps.Placemark(lib.coords, {
+                balloonContent: `
+                    <div style="padding: 8px; max-width: 280px;">
+                        <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #1e293b;">${lib.name}</h3>
+                        <p style="margin: 0 0 4px 0; font-size: 14px; color: #475569;">
+                            <strong>Адрес:</strong> ${lib.address}
+                        </p>
+                        <p style="margin: 0 0 4px 0; font-size: 14px; color: #475569;">
+                            <strong>Телефон:</strong> ${lib.phone}
+                        </p>
+                        <p style="margin: 0; font-size: 14px; color: #475569;">
+                            <strong>Режим работы:</strong> ${lib.hours}
+                        </p>
+                    </div>
+                `
+            }, {
+                preset: lib.isCentral ? 'islands#blueLibraryIcon' : 'islands#grayLibraryIcon',
+                iconColor: lib.isCentral ? '#1d4ed8' : '#64748b'
+            });
+
+            yandexMap.geoObjects.add(placemark);
+            yandexPlacemarks[lib.id] = placemark;
+        });
+    }
+
+    // Focus map on specific library
+    function focusOnMap(libraryId) {
+        const lib = librariesData.find(l => l.id === libraryId);
+        if (lib && yandexMap && yandexPlacemarks[libraryId]) {
+            yandexMap.setCenter(lib.coords, 16);
+            yandexPlacemarks[libraryId].balloon.open();
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        renderLibrariesList();
+        
+        // Initialize Yandex Maps
+        if (typeof ymaps !== 'undefined') {
+            ymaps.ready(initYandexMap);
+        } else {
+            console.error('Yandex Maps API not loaded');
+            document.getElementById('yandex-map').innerHTML = `
+                <div class="flex items-center justify-center h-full bg-slate-50">
+                    <div class="text-center p-8">
                         <div class="inline-flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-4">
                             <i data-lucide="alert-circle" class="w-6 h-6 text-red-600"></i>
                         </div>
-                        <p class="text-slate-600">Ошибка загрузки данных</p>
+                        <p class="text-slate-600">Не удалось загрузить карту</p>
                     </div>
-                `;
-                lucide.createIcons();
-            });
+                </div>
+            `;
+            lucide.createIcons();
+        }
     });
 </script>
 {% endblock %}

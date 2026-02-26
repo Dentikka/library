@@ -67,6 +67,12 @@ async def libraries_page(request: Request):
     return templates.TemplateResponse("libraries.html", {"request": request})
 
 
+@app.get("/about", response_class=HTMLResponse)
+async def about_page(request: Request):
+    """About page."""
+    return templates.TemplateResponse("about.html", {"request": request})
+
+
 @app.get("/staff/login", response_class=HTMLResponse)
 async def staff_login_page(request: Request):
     """Staff login page."""
