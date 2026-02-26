@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, delete
+from sqlalchemy import select, func, delete, case
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
 
@@ -48,7 +48,7 @@ async def list_books(
             Book.updated_at,
             Author.name.label("author_name"),
             func.count(Copy.id).label("total_count"),
-            func.count(Copy.id).filter(Copy.status == "available").label("available_count")
+            func.sum(case((Copy.status == "available", 1), else_=0)).label("available_count")
         )
         .join(Author, Book.author_id == Author.id)
         .outerjoin(Copy, Book.id == Copy.book_id)
@@ -347,7 +347,7 @@ async def upload_book_cover(
             Book.updated_at,
             Author.name.label("author_name"),
             func.count(Copy.id).label("total_count"),
-            func.count(Copy.id).filter(Copy.status == "available").label("available_count")
+            func.sum(case((Copy.status == "available", 1), else_=0)).label("available_count")
         )
         .join(Author, Book.author_id == Author.id)
         .outerjoin(Copy, Book.id == Copy.book_id)

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_, and_
+from sqlalchemy import select, func, or_, and_, case
 from typing import List, Optional
 
 from app.database import get_db
@@ -33,7 +33,7 @@ async def search_books(
             Author.name.label("author_name"),
             Book.year,
             func.count(Copy.id).label("total_count"),
-            func.count(Copy.id).filter(Copy.status == "available").label("available_count")
+            func.sum(case((Copy.status == "available", 1), else_=0)).label("available_count")
         )
         .join(Author, Book.author_id == Author.id)
         .outerjoin(Copy, Book.id == Copy.book_id)
@@ -187,15 +187,15 @@ async def advanced_search(
             Author.name.label("author_name"),
             Book.year,
             func.count(Copy.id).label("total_count"),
-            func.count(Copy.id).filter(Copy.status == "available").label("available_count")
+            func.sum(case((Copy.status == "available", 1), else_=0)).label("available_count")
         )
         .join(Author, Book.author_id == Author.id)
         .outerjoin(Copy, Book.id == Copy.book_id)
     )
-    
+
     # Apply filters
     filters = []
-    
+
     if title:
         title_patterns = [f"%{title}%", f"%{title.lower()}%", f"%{title.upper()}%", f"%{title.capitalize()}%"]
         filters.append(or_(*[Book.title.like(p) for p in title_patterns]))
