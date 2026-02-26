@@ -289,6 +289,17 @@
     </div>
     
     <script>
+        // Safe lucide initialization function - defined FIRST
+        function safeLucideInit() {
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                try {
+                    lucide.createIcons();
+                } catch (e) {
+                    console.warn('Lucide init error:', e);
+                }
+            }
+        }
+
         // Utility: Escape HTML to prevent XSS
         function escapeHtml(text) {
             if (!text) return '';
@@ -402,7 +413,7 @@
                         </td>
                     </tr>
                 `).join('');
-                lucide.createIcons();
+                safeLucideInit();
             })
             .catch(error => {
                 console.error('Error loading books:', error);
@@ -469,15 +480,13 @@
                         </td>
                     </tr>
                 `).join('');
-                if (typeof lucide !== 'undefined') {
-                    lucide.createIcons();
-                }
+                safeLucideInit();
             } catch (error) {
                 console.error('Error loading authors list:', error);
                 tbody.innerHTML = '<tr><td colspan="3" class="text-center py-8 text-red-500">Ошибка загрузки авторов</td></tr>';
             }
         }
-        
+
         // Load libraries for the Libraries section
         async function loadLibrariesList() {
             const token = localStorage.getItem('access_token');
@@ -529,7 +538,7 @@
                         </div>
                     </div>
                 `).join('');
-                lucide.createIcons();
+                safeLucideInit();
             } catch (error) {
                 console.error('Error loading libraries list:', error);
             }
@@ -632,7 +641,7 @@
                         </div>
                     `;
                 }
-                lucide.createIcons();
+                safeLucideInit();
             } catch (error) {
                 console.error('Error loading books with copies:', error);
             }
@@ -710,9 +719,7 @@
                 document.getElementById('cover-input').disabled = true;
                 document.querySelector('#cover-section label').classList.add('opacity-50', 'cursor-not-allowed');
                 document.querySelector('#cover-section p.text-xs').textContent = 'Сначала сохраните книгу, чтобы загрузить обложку';
-                if (typeof lucide !== 'undefined') {
-                    lucide.createIcons();
-                }
+                safeLucideInit();
             } catch (error) {
                 console.error('Error opening add book modal:', error);
                 alert('Ошибка открытия модального окна. Проверьте консоль для деталей.');
@@ -748,7 +755,7 @@
                 await loadExistingCover(bookId);
                 
                 document.getElementById('book-modal').classList.remove('hidden');
-                lucide.createIcons();
+                safeLucideInit();
             } catch (error) {
                 console.error('Error loading book:', error);
                 alert('Ошибка загрузки книги');
@@ -811,7 +818,7 @@
                         document.querySelector('#cover-section label').classList.remove('opacity-50', 'cursor-not-allowed');
                         document.querySelector('#cover-section p.text-xs').textContent = 'Максимальный размер: 5MB. Рекомендуемый размер: 400x600px';
                         alert('Книга создана! Теперь можно загрузить обложку.');
-                        lucide.createIcons();
+                        safeLucideInit();
                     } else {
                         closeBookModal();
                         loadBooks();
@@ -867,7 +874,7 @@
         
         // Initialize
         loadAuthors();
-        lucide.createIcons();
+        safeLucideInit();
         
         // Cover upload variables
         let selectedCoverFile = null;
@@ -909,7 +916,7 @@
             // Enable upload button
             document.getElementById('upload-cover-btn').disabled = false;
             
-            lucide.createIcons();
+            safeLucideInit();
         }
         
         // Upload cover to server
@@ -927,7 +934,7 @@
             const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin inline"></i> Загрузка...';
-            lucide.createIcons();
+            safeLucideInit();
             
             try {
                 const response = await fetch(`/api/v1/books/${currentEditingBookId}/cover`, {
@@ -964,7 +971,7 @@
             }
             
             btn.innerHTML = originalText;
-            lucide.createIcons();
+            safeLucideInit();
         }
         
         // Remove cover preview
@@ -1100,5 +1107,6 @@
             </form>
         </div>
     </div>
+
 </body>
 </html>

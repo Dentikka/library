@@ -149,7 +149,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Perform search
 function performSearch(event) {
-    if (event) event.preventDefault();
+    event.preventDefault();
+    event.stopPropagation();
     const query = document.getElementById('search-input').value.trim();
     if (query) {
         console.log('Searching for:', query);
@@ -256,8 +257,10 @@ async function loadSearchResults(query, page = 1) {
             `;
         }
         
-        // Re-initialize icons
-        lucide.createIcons();
+        // Re-initialize icons (safely)
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
     } catch (error) {
         console.error('Search error:', error);
         document.getElementById('results-container').innerHTML = `
@@ -269,7 +272,9 @@ async function loadSearchResults(query, page = 1) {
                 <p class="text-slate-600">Попробуйте обновить страницу</p>
             </div>
         `;
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
     }
 }
 
@@ -367,8 +372,10 @@ function renderPagination() {
     const pageNumbersDiv = document.getElementById('page-numbers');
     pageNumbersDiv.innerHTML = generatePageNumbers();
     
-    // Re-initialize icons
-    lucide.createIcons();
+    // Re-initialize icons (safely)
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons();
+    }
 }
 
 // Generate page number buttons HTML
