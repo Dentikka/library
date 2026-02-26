@@ -289,6 +289,14 @@
     </div>
     
     <script>
+        // Utility: Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
         // Check auth on load
         document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('access_token');
@@ -422,20 +430,37 @@
         // Load all authors for the Authors section
         async function loadAuthorsList() {
             const token = localStorage.getItem('access_token');
+            if (!token) {
+                console.error('No access token found');
+                window.location.href = '/staff/login';
+                return;
+            }
+            const tbody = document.getElementById('authors-table-body');
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center py-8 text-slate-500">Загрузка...</td></tr>';
             try {
                 const response = await fetch('/api/v1/authors', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/staff/login';
+                        return;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
                 const authors = await response.json();
-                const tbody = document.getElementById('authors-table-body');
+                if (!authors || authors.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center py-8 text-slate-500">Нет авторов</td></tr>';
+                    return;
+                }
                 tbody.innerHTML = authors.map(author => `
                     <tr class="hover:bg-slate-50">
                         <td class="px-6 py-4 text-sm text-slate-500">${author.id}</td>
                         <td class="px-6 py-4">
-                            <p class="font-medium text-slate-900">${author.name}</p>
+                            <p class="font-medium text-slate-900">${escapeHtml(author.name)}</p>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <button onclick="editAuthor(${author.id}, '${author.name}')" class="text-slate-400 hover:text-blue-600 mr-3" title="Редактировать">
+                            <button onclick="editAuthor(${author.id}, '${escapeHtml(author.name).replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-blue-600 mr-3" title="Редактировать">
                                 <i data-lucide="edit" class="w-5 h-5 inline"></i>
                             </button>
                             <button onclick="deleteAuthor(${author.id})" class="text-red-400 hover:text-red-600" title="Удалить">
@@ -444,21 +469,41 @@
                         </td>
                     </tr>
                 `).join('');
-                lucide.createIcons();
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
             } catch (error) {
                 console.error('Error loading authors list:', error);
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-8 text-red-500">Ошибка загрузки авторов</td></tr>';
             }
         }
         
         // Load libraries for the Libraries section
         async function loadLibrariesList() {
             const token = localStorage.getItem('access_token');
+            if (!token) {
+                console.error('No access token found');
+                window.location.href = '/staff/login';
+                return;
+            }
+            const container = document.getElementById('libraries-container');
+            container.innerHTML = '<div class="text-center py-8 text-slate-500">Загрузка...</div>';
             try {
                 const response = await fetch('/api/v1/libraries', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/staff/login';
+                        return;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
                 librariesList = await response.json();
-                const container = document.getElementById('libraries-container');
+                if (!librariesList || librariesList.length === 0) {
+                    container.innerHTML = '<div class="text-center py-8 text-slate-500">Нет библиотек</div>';
+                    return;
+                }
                 container.innerHTML = librariesList.map(lib => `
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition">
                         <div class="flex items-start gap-4">
@@ -466,8 +511,8 @@
                                 <i data-lucide="building-2" class="w-6 h-6 text-blue-700"></i>
                             </div>
                             <div class="flex-grow">
-                                <h3 class="font-semibold text-slate-900">${lib.name}</h3>
-                                <p class="text-sm text-slate-600 mt-1">${lib.address}</p>
+                                <h3 class="font-semibold text-slate-900">${escapeHtml(lib.name)}</h3>
+                                <p class="text-sm text-slate-600 mt-1">${escapeHtml(lib.address)}</p>
                                 <div class="flex items-center gap-4 mt-3 text-sm text-slate-500">
                                     <span class="flex items-center gap-1">
                                         <i data-lucide="phone" class="w-4 h-4"></i>
@@ -651,20 +696,27 @@
         // Open modal for adding book
         async function openAddBookModal() {
             console.log('Opening add book modal');
-            await loadAuthors();
-            currentEditingBookId = null;
-            document.getElementById('modal-title').textContent = 'Добавить книгу';
-            document.getElementById('book-form').reset();
-            populateAuthorSelect();
-            resetCoverSection();
-            // Show modal
-            document.getElementById('book-modal').classList.remove('hidden');
-            console.log('Modal opened successfully');
-            // Disable cover upload until book is created
-            document.getElementById('cover-input').disabled = true;
-            document.querySelector('#cover-section label').classList.add('opacity-50', 'cursor-not-allowed');
-            document.querySelector('#cover-section p.text-xs').textContent = 'Сначала сохраните книгу, чтобы загрузить обложку';
-            lucide.createIcons();
+            try {
+                await loadAuthors();
+                currentEditingBookId = null;
+                document.getElementById('modal-title').textContent = 'Добавить книгу';
+                document.getElementById('book-form').reset();
+                populateAuthorSelect();
+                resetCoverSection();
+                // Show modal
+                document.getElementById('book-modal').classList.remove('hidden');
+                console.log('Modal opened successfully');
+                // Disable cover upload until book is created
+                document.getElementById('cover-input').disabled = true;
+                document.querySelector('#cover-section label').classList.add('opacity-50', 'cursor-not-allowed');
+                document.querySelector('#cover-section p.text-xs').textContent = 'Сначала сохраните книгу, чтобы загрузить обложку';
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            } catch (error) {
+                console.error('Error opening add book modal:', error);
+                alert('Ошибка открытия модального окна. Проверьте консоль для деталей.');
+            }
         }
         
         // Open modal for editing book
