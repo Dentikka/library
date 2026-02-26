@@ -26,12 +26,31 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 class="text-2xl font-bold text-slate-900 mb-6">Карта расположения</h2>
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div id="yandex-map" class="w-full h-[400px] md:h-[500px]"></div>
+            <!-- Primary: Yandex Maps API -->
+            <div id="yandex-map" class="w-full h-[400px] md:h-[500px]">
+                <!-- Fallback iframe (shown if JS API fails) -->
+                <iframe 
+                    id="yandex-map-fallback"
+                    src="https://yandex.ru/map-widget/v1/?ll=39.8884%2C59.2206&z=11&l=map&pt=39.8884%2C59.2206%2Ccomma~39.8652%2C59.2095%2Ccomma~39.8767%2C59.2183%2Ccomma~39.8713%2C59.2041%2Ccomma~40.0642%2C59.1208%2Ccomma~39.6758%2C59.2854%2Ccomma~39.9025%2C59.2147%2Ccomma~39.8891%2C59.1972%2Ccomma~39.8489%2C59.1925%2Ccomma~39.8389%2C59.2289%2Ccomma~39.8998%2C59.2356%2Ccomma" 
+                    width="100%" 
+                    height="100%" 
+                    frameborder="0"
+                    allowfullscreen="true"
+                    style="position: relative;"
+                    class="w-full h-full"
+                ></iframe>
+            </div>
         </div>
-        <p class="text-sm text-slate-500 mt-3 flex items-center gap-2">
-            <i data-lucide="info" class="w-4 h-4"></i>
-            Кликните на метку, чтобы увидеть адрес и режим работы библиотеки
-        </p>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-3">
+            <p class="text-sm text-slate-500 flex items-center gap-2">
+                <i data-lucide="info" class="w-4 h-4"></i>
+                Кликните на метку, чтобы увидеть адрес и режим работы библиотеки
+            </p>
+            <a href="https://yandex.ru/maps/?ll=39.8884%2C59.2206&z=11&pt=39.8884%2C59.2206%2Ccomma" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+                Открыть в Яндекс.Картах
+            </a>
+        </div>
     </div>
 </section>
 
@@ -213,6 +232,14 @@
     let yandexPlacemarks = [];
 
     function initYandexMap() {
+        // Hide iframe fallback when API loads
+        const fallback = document.getElementById('yandex-map-fallback');
+        if (fallback) fallback.style.display = 'none';
+        
+        // Clear container and create map
+        const container = document.getElementById('yandex-map');
+        container.innerHTML = '';
+        
         yandexMap = new ymaps.Map('yandex-map', {
             center: [59.2206, 39.8884],
             zoom: 11,
@@ -263,18 +290,14 @@
         if (typeof ymaps !== 'undefined') {
             ymaps.ready(initYandexMap);
         } else {
-            console.error('Yandex Maps API not loaded');
-            document.getElementById('yandex-map').innerHTML = `
-                <div class="flex items-center justify-center h-full bg-slate-50">
-                    <div class="text-center p-8">
-                        <div class="inline-flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-4">
-                            <i data-lucide="alert-circle" class="w-6 h-6 text-red-600"></i>
-                        </div>
-                        <p class="text-slate-600">Не удалось загрузить карту</p>
-                    </div>
-                </div>
-            `;
-            lucide.createIcons();
+            console.warn('Yandex Maps API not loaded, using iframe fallback');
+            // Iframe fallback is already in place, just ensure it's visible
+            const fallback = document.getElementById('yandex-map-fallback');
+            if (fallback) {
+                fallback.style.display = 'block';
+                fallback.style.width = '100%';
+                fallback.style.height = '100%';
+            }
         }
     });
 </script>
