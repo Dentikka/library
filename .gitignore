@@ -71,3 +71,7 @@ static/uploads/
 
 # Reports (local only)
 reports/*.local.md
+
+# Backups
+backups/
+*.sql.gz
