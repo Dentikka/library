@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,8 +13,10 @@ from app.services.auth import (
 )
 from app.schemas.auth import Token, LoginRequest, StaffUserResponse, StaffUserCreate
 from app.models import StaffUser
+from app.logging_config import get_logger
 
 router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
+logger = get_logger(__name__)
 
 # OAuth2 scheme for Swagger UI
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -77,6 +79,7 @@ async def get_current_admin(
 
 @router.post("/login", response_model=Token)
 async def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
 ):
@@ -87,6 +90,10 @@ async def login(
     user = await authenticate_user(db, form_data.username, form_data.password)
     
     if not user:
+        logger.warning(
+            f"Failed login attempt for user: {form_data.username}",
+            extra={"username": form_data.username}
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -94,6 +101,10 @@ async def login(
         )
     
     if not user.is_active:
+        logger.warning(
+            f"Login attempt for inactive user: {form_data.username}",
+            extra={"username": form_data.username, "user_id": user.id}
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User is inactive"
@@ -101,6 +112,12 @@ async def login(
     
     access_token = create_access_token(user.id)
     refresh_token = create_refresh_token(user.id)
+    
+    request_id = getattr(request.state, 'request_id', 'unknown')
+    logger.info(
+        f"User logged in: {user.username}",
+        extra={"user_id": user.id, "username": user.username, "request_id": request_id}
+    )
     
     return {
         "access_token": access_token,
@@ -161,6 +178,7 @@ async def get_me(current_user: StaffUser = Depends(get_current_active_staff)):
 
 @router.post("/register", response_model=StaffUserResponse)
 async def register(
+    request: Request,
     user_data: StaffUserCreate,
     db: AsyncSession = Depends(get_db),
     admin: StaffUser = Depends(get_current_admin)
@@ -175,6 +193,10 @@ async def register(
         select(StaffUser).where(StaffUser.username == user_data.username)
     )
     if result.scalar_one_or_none():
+        logger.warning(
+            f"Registration failed: username already exists: {user_data.username}",
+            extra={"username": user_data.username, "admin_id": admin.id}
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"
@@ -193,5 +215,18 @@ async def register(
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
+    
+    request_id = getattr(request.state, 'request_id', 'unknown')
+    logger.info(
+        f"New user registered: {new_user.username} by admin {admin.username}",
+        extra={
+            "user_id": new_user.id,
+            "username": new_user.username,
+            "admin_id": admin.id,
+            "admin_username": admin.username,
+            "is_admin": new_user.is_admin,
+            "request_id": request_id
+        }
+    )
     
     return new_user

@@ -7,10 +7,22 @@ from contextlib import asynccontextmanager
 from app.database import engine, Base
 from app.routers import auth, libraries, books, search, authors
 from app.config import validate_critical_settings
+from app.logging_config import setup_logging, get_logger
+from app.middleware import RequestLoggingMiddleware, ErrorLoggingMiddleware
 
 # Валидация критических настроек при импорте модуля
 # Вызывает ошибку с понятным сообщением если SECRET_KEY или DATABASE_URL не заданы
 validate_critical_settings()
+
+# Setup structured logging (use JSON in production, console in development)
+import os
+log_format = os.getenv("LOG_FORMAT", "console")
+log_level = os.getenv("LOG_LEVEL", "INFO")
+log_file = os.getenv("LOG_FILE")  # Optional file logging
+setup_logging(level=log_level, format_type=log_format, log_file=log_file)
+
+logger = get_logger(__name__)
+logger.info("Library Management System starting up")
 
 
 @asynccontextmanager
@@ -29,6 +41,10 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Add logging middleware
+app.add_middleware(ErrorLoggingMiddleware)
+app.add_middleware(RequestLoggingMiddleware)
 
 # Include API routers
 app.include_router(auth.router)
@@ -87,4 +103,16 @@ async def staff_dashboard_page(request: Request):
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    """Health check endpoint for monitoring.
+    
+    Returns:
+        - status: 'ok' or 'error'
+        - version: API version
+        - timestamp: Current UTC timestamp
+    """
+    from datetime import datetime, timezone
+    return {
+        "status": "ok",
+        "version": "0.1.0",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
