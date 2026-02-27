@@ -906,6 +906,7 @@
                         'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ 
+                        book_id: parseInt(bookId),
                         library_id: parseInt(libraryId),
                         inventory_number: inventoryNumber || null
                     })
