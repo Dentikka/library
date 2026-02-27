@@ -428,13 +428,26 @@
         // Load authors for select
         async function loadAuthors() {
             const token = localStorage.getItem('access_token');
+            if (!token) {
+                console.error('No access token found');
+                window.location.href = '/staff/login';
+                return;
+            }
             try {
                 const response = await fetch('/api/v1/authors', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/staff/login';
+                        return;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
                 authorsList = await response.json();
             } catch (error) {
                 console.error('Error loading authors:', error);
+                throw error;
             }
         }
         
@@ -790,16 +803,29 @@
         // Load libraries for copy select
         async function loadLibrariesForCopySelect() {
             const token = localStorage.getItem('access_token');
+            if (!token) {
+                console.error('No access token found');
+                window.location.href = '/staff/login';
+                return;
+            }
             try {
                 const response = await fetch('/api/v1/libraries', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/staff/login';
+                        return;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
                 const libraries = await response.json();
                 const select = document.getElementById('copy-library');
                 select.innerHTML = '<option value="">Выберите библиотеку</option>' +
                     libraries.map(l => `<option value="${l.id}">${l.name} (${l.address})</option>`).join('');
             } catch (error) {
                 console.error('Error loading libraries:', error);
+                throw error;
             }
         }
         
