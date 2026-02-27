@@ -647,22 +647,184 @@
             }
         }
         
-        // Placeholder functions for CRUD operations
-        function openAddAuthorModal() { alert('Функция добавления автора будет реализована в API'); }
+        // Open author modal
+        function openAddAuthorModal() {
+            document.getElementById('author-form').reset();
+            document.getElementById('author-modal').classList.remove('hidden');
+            safeLucideInit();
+        }
+        
+        // Close author modal
+        function closeAuthorModal() {
+            document.getElementById('author-modal').classList.add('hidden');
+        }
+        
+        // Save author
+        async function saveAuthor(event) {
+            event.preventDefault();
+            const token = localStorage.getItem('access_token');
+            const name = document.getElementById('author-name').value.trim();
+            
+            if (!name) {
+                alert('Введите имя автора');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v1/authors', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name })
+                });
+                
+                if (response.ok) {
+                    closeAuthorModal();
+                    loadAuthorsList();
+                    alert('Автор успешно добавлен');
+                } else {
+                    const error = await response.json();
+                    alert('Ошибка: ' + (error.detail || 'Не удалось добавить автора'));
+                }
+            } catch (error) {
+                console.error('Error saving author:', error);
+                alert('Ошибка сохранения автора');
+            }
+        }
+        
         function editAuthor(id, name) { alert('Редактирование автора: ' + name); }
         function deleteAuthor(id) { 
             if (confirm('Удалить автора?')) {
                 alert('Удаление будет реализовано в API');
             }
         }
-        function openAddLibraryModal() { alert('Функция добавления библиотеки будет реализована в API'); }
-        function editLibrary(id) { alert('Редактирование библиотеки #' + id); }
-        function openAddCopyModal(bookId) { 
-            const libId = prompt('Введите ID библиотеки:');
-            if (libId) {
-                alert('Добавление экземпляра в библиотеку #' + libId + ' для книги #' + bookId);
+        
+        // Open library modal
+        function openAddLibraryModal() {
+            document.getElementById('library-form').reset();
+            document.getElementById('library-modal').classList.remove('hidden');
+            safeLucideInit();
+        }
+        
+        // Close library modal
+        function closeLibraryModal() {
+            document.getElementById('library-modal').classList.add('hidden');
+        }
+        
+        // Save library
+        async function saveLibrary(event) {
+            event.preventDefault();
+            const token = localStorage.getItem('access_token');
+            const name = document.getElementById('library-name').value.trim();
+            const address = document.getElementById('library-address').value.trim();
+            const phone = document.getElementById('library-phone').value.trim();
+            
+            if (!name || !address) {
+                alert('Заполните название и адрес');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v1/libraries', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name, address, phone: phone || null })
+                });
+                
+                if (response.ok) {
+                    closeLibraryModal();
+                    loadLibraries();
+                    alert('Библиотека успешно добавлена');
+                } else {
+                    const error = await response.json();
+                    alert('Ошибка: ' + (error.detail || 'Не удалось добавить библиотеку'));
+                }
+            } catch (error) {
+                console.error('Error saving library:', error);
+                alert('Ошибка сохранения библиотеки');
             }
         }
+        
+        function editLibrary(id) { alert('Редактирование библиотеки #' + id); }
+        
+        // Open copy modal
+        async function openAddCopyModal(bookId) {
+            document.getElementById('copy-form').reset();
+            document.getElementById('copy-book-id').value = bookId;
+            
+            // Load libraries into select
+            await loadLibrariesForCopySelect();
+            
+            document.getElementById('copy-modal').classList.remove('hidden');
+            safeLucideInit();
+        }
+        
+        // Close copy modal
+        function closeCopyModal() {
+            document.getElementById('copy-modal').classList.add('hidden');
+        }
+        
+        // Load libraries for copy select
+        async function loadLibrariesForCopySelect() {
+            const token = localStorage.getItem('access_token');
+            try {
+                const response = await fetch('/api/v1/libraries', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const libraries = await response.json();
+                const select = document.getElementById('copy-library');
+                select.innerHTML = '<option value="">Выберите библиотеку</option>' +
+                    libraries.map(l => `<option value="${l.id}">${l.name} (${l.address})</option>`).join('');
+            } catch (error) {
+                console.error('Error loading libraries:', error);
+            }
+        }
+        
+        // Save copy
+        async function saveCopy(event) {
+            event.preventDefault();
+            const token = localStorage.getItem('access_token');
+            const bookId = document.getElementById('copy-book-id').value;
+            const libraryId = document.getElementById('copy-library').value;
+            const inventoryNumber = document.getElementById('copy-inventory').value.trim();
+            
+            if (!libraryId) {
+                alert('Выберите библиотеку');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/v1/books/${bookId}/copies`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ 
+                        library_id: parseInt(libraryId),
+                        inventory_number: inventoryNumber || null
+                    })
+                });
+                
+                if (response.ok) {
+                    closeCopyModal();
+                    loadCopies();
+                    alert('Экземпляр успешно добавлен');
+                } else {
+                    const error = await response.json();
+                    alert('Ошибка: ' + (error.detail || 'Не удалось добавить экземпляр'));
+                }
+            } catch (error) {
+                console.error('Error saving copy:', error);
+                alert('Ошибка сохранения экземпляра');
+            }
+        }
+        
         function deleteCopy(copyId, bookId) { 
             if (confirm('Удалить экземпляр?')) {
                 alert('Удаление будет реализовано в API');
@@ -1102,6 +1264,126 @@
                     <button type="submit"
                         class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition">
                         Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Author Modal -->
+    <div id="author-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div class="flex justify-between items-center p-6 border-b border-slate-200">
+                <h3 class="text-xl font-semibold text-slate-900">Добавить автора</h3>
+                <button onclick="closeAuthorModal()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <form id="author-form" class="p-6 space-y-4" onsubmit="saveAuthor(event)">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Имя автора <span class="text-red-500">*</span></label>
+                    <input type="text" id="author-name" required
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        placeholder="Введите имя автора">
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeAuthorModal()"
+                        class="px-4 py-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                        Отмена
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition">
+                        Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Library Modal -->
+    <div id="library-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div class="flex justify-between items-center p-6 border-b border-slate-200">
+                <h3 class="text-xl font-semibold text-slate-900">Добавить библиотеку</h3>
+                <button onclick="closeLibraryModal()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <form id="library-form" class="p-6 space-y-4" onsubmit="saveLibrary(event)">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Название <span class="text-red-500">*</span></label>
+                    <input type="text" id="library-name" required
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        placeholder="Например: Центральная библиотека">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Адрес <span class="text-red-500">*</span></label>
+                    <input type="text" id="library-address" required
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        placeholder="ул. Пушкинская, 1">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Телефон</label>
+                    <input type="text" id="library-phone"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        placeholder="(8172) 72-33-45">
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeLibraryModal()"
+                        class="px-4 py-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                        Отмена
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition">
+                        Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Copy Modal -->
+    <div id="copy-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div class="flex justify-between items-center p-6 border-b border-slate-200">
+                <h3 class="text-xl font-semibold text-slate-900">Добавить экземпляр</h3>
+                <button onclick="closeCopyModal()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <form id="copy-form" class="p-6 space-y-4" onsubmit="saveCopy(event)">
+                <input type="hidden" id="copy-book-id">
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Библиотека <span class="text-red-500">*</span></label>
+                    <select id="copy-library" required
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
+                        <option value="">Выберите библиотеку</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Инвентарный номер</label>
+                    <input type="text" id="copy-inventory"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        placeholder="Например: 001234">
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeCopyModal()"
+                        class="px-4 py-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                        Отмена
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition">
+                        Добавить
                     </button>
                 </div>
             </form>
