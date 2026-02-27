@@ -51,6 +51,7 @@ class CopyBase(BaseModel):
 
 
 class CopyCreate(BaseModel):
+    book_id: Optional[int] = None  # Optional, can be provided for compatibility
     library_id: int
     inventory_number: Optional[str] = None
     status: str = "available"
