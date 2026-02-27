@@ -149,8 +149,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Perform search
 function performSearch(event) {
-    event.preventDefault();
-    event.stopPropagation();
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
     const query = document.getElementById('search-input').value.trim();
     if (query) {
         console.log('Searching for:', query);
@@ -171,8 +173,26 @@ function performSearch(event) {
         const paginationEl = document.getElementById('pagination');
         if (paginationEl) paginationEl.style.display = 'none';
         
-        // Load results
-        loadSearchResults(query, 1);
+        // Load results with error handling
+        loadSearchResults(query, 1).catch(err => {
+            console.error('Search failed:', err);
+            document.getElementById('results-count').textContent = 'Ошибка поиска';
+            document.getElementById('results-container').innerHTML = `
+                <div class="text-center py-12">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                        <i data-lucide="alert-circle" class="w-8 h-8 text-red-600"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-slate-900 mb-2">Ошибка поиска</h3>
+                    <p class="text-slate-600">${escapeHtml(err.message || 'Попробуйте обновить страницу')}</p>
+                    <button onclick="loadSearchResults('${escapeHtml(query)}', 1)" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Повторить
+                    </button>
+                </div>
+            `;
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+            }
+        });
     }
     return false;
 }

@@ -460,7 +460,13 @@
                 return;
             }
             const tbody = document.getElementById('authors-table-body');
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center py-8 text-slate-500">Загрузка...</td></tr>';
+            if (!tbody) {
+                console.error('Authors table body not found');
+                return;
+            }
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center py-8 text-slate-500"><i data-lucide="loader-2" class="w-6 h-6 animate-spin inline mr-2"></i>Загрузка...</td></tr>';
+            safeLucideInit();
+            
             try {
                 const response = await fetch('/api/v1/authors', {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -474,7 +480,22 @@
                 }
                 const authors = await response.json();
                 if (!authors || authors.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" class="text-center py-8 text-slate-500">Нет авторов</td></tr>';
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="text-center py-12">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
+                                    <i data-lucide="pen-tool" class="w-8 h-8 text-slate-400"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-slate-900 mb-2">Нет авторов</h3>
+                                <p class="text-slate-600 mb-4">Добавьте первого автора, чтобы начать</p>
+                                <button onclick="openAddAuthorModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                    <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                                    Добавить автора
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    safeLucideInit();
                     return;
                 }
                 tbody.innerHTML = authors.map(author => `
@@ -496,7 +517,20 @@
                 safeLucideInit();
             } catch (error) {
                 console.error('Error loading authors list:', error);
-                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-8 text-red-500">Ошибка загрузки авторов</td></tr>';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center py-8">
+                            <div class="inline-flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-3">
+                                <i data-lucide="alert-circle" class="w-6 h-6 text-red-600"></i>
+                            </div>
+                            <p class="text-red-500 font-medium">Ошибка загрузки авторов</p>
+                            <button onclick="loadAuthorsList()" class="mt-3 px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg">
+                                Повторить
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                safeLucideInit();
             }
         }
 
@@ -509,7 +543,13 @@
                 return;
             }
             const container = document.getElementById('libraries-container');
-            container.innerHTML = '<div class="text-center py-8 text-slate-500">Загрузка...</div>';
+            if (!container) {
+                console.error('Libraries container not found');
+                return;
+            }
+            container.innerHTML = '<div class="text-center py-8 text-slate-500"><i data-lucide="loader-2" class="w-6 h-6 animate-spin inline mr-2"></i>Загрузка...</div>';
+            safeLucideInit();
+            
             try {
                 const response = await fetch('/api/v1/libraries', {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -523,7 +563,20 @@
                 }
                 librariesList = await response.json();
                 if (!librariesList || librariesList.length === 0) {
-                    container.innerHTML = '<div class="text-center py-8 text-slate-500">Нет библиотек</div>';
+                    container.innerHTML = `
+                        <div class="col-span-2 text-center py-12">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
+                                <i data-lucide="building-2" class="w-8 h-8 text-slate-400"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-slate-900 mb-2">Нет библиотек</h3>
+                            <p class="text-slate-600 mb-4">Добавьте первую библиотеку</p>
+                            <button onclick="openAddLibraryModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                                Добавить библиотеку
+                            </button>
+                        </div>
+                    `;
+                    safeLucideInit();
                     return;
                 }
                 container.innerHTML = librariesList.map(lib => `
@@ -554,38 +607,67 @@
                 safeLucideInit();
             } catch (error) {
                 console.error('Error loading libraries list:', error);
+                container.innerHTML = `
+                    <div class="col-span-2 text-center py-8">
+                        <div class="inline-flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-3">
+                            <i data-lucide="alert-circle" class="w-6 h-6 text-red-600"></i>
+                        </div>
+                        <p class="text-red-500 font-medium">Ошибка загрузки библиотек</p>
+                        <button onclick="loadLibrariesList()" class="mt-3 px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg">
+                            Повторить
+                        </button>
+                    </div>
+                `;
+                safeLucideInit();
             }
         }
         
         // Load books with copies for the Copies section
         async function loadBooksWithCopies() {
             const token = localStorage.getItem('access_token');
+            const container = document.getElementById('copies-container');
+            if (!container) {
+                console.error('Copies container not found');
+                return;
+            }
+            
+            container.innerHTML = '<div class="text-center py-8 text-slate-500"><i data-lucide="loader-2" class="w-6 h-6 animate-spin inline mr-2"></i>Загрузка экземпляров...</div>';
+            safeLucideInit();
+            
             try {
                 // First load books
                 const booksResponse = await fetch('/api/v1/books?limit=20', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (!booksResponse.ok) {
+                    throw new Error(`Books API error: ${booksResponse.status}`);
+                }
                 const books = await booksResponse.json();
                 
                 // Load libraries for reference
                 const libsResponse = await fetch('/api/v1/libraries', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (!libsResponse.ok) {
+                    throw new Error(`Libraries API error: ${libsResponse.status}`);
+                }
                 const libs = await libsResponse.json();
                 const libMap = {};
                 libs.forEach(l => libMap[l.id] = l.name);
                 
                 // For each book, load its copies
-                const container = document.getElementById('copies-container');
-                container.innerHTML = '<div class="text-center py-8 text-slate-500">Загрузка экземпляров...</div>';
-                
                 let html = '';
+                let totalCopies = 0;
+                
                 for (const book of books) {
                     try {
                         const copiesResponse = await fetch(`/api/v1/books/${book.id}/copies`, {
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
+                        if (!copiesResponse.ok) continue;
+                        
                         const copies = await copiesResponse.json();
+                        totalCopies += copies.length;
                         
                         if (copies.length > 0) {
                             html += `
@@ -593,8 +675,8 @@
                                     <div class="p-4 bg-slate-50 border-b border-slate-200">
                                         <div class="flex justify-between items-center">
                                             <div>
-                                                <h3 class="font-semibold text-slate-900">${book.title}</h3>
-                                                <p class="text-sm text-slate-600">${book.author_name || '-'}</p>
+                                                <h3 class="font-semibold text-slate-900">${escapeHtml(book.title)}</h3>
+                                                <p class="text-sm text-slate-600">${escapeHtml(book.author_name) || '-'}</p>
                                             </div>
                                             <button onclick="openAddCopyModal(${book.id})" class="text-blue-700 hover:text-blue-800 text-sm font-medium">
                                                 + Добавить экземпляр
@@ -616,8 +698,8 @@
                                                 ${copies.map(copy => `
                                                     <tr class="hover:bg-slate-50">
                                                         <td class="px-4 py-2 text-sm text-slate-500">${copy.id}</td>
-                                                        <td class="px-4 py-2 text-sm font-medium text-slate-900">${copy.inventory_number || '-'}</td>
-                                                        <td class="px-4 py-2 text-sm text-slate-600">${copy.library_name || libMap[copy.library_id] || '-'}</td>
+                                                        <td class="px-4 py-2 text-sm font-medium text-slate-900">${escapeHtml(copy.inventory_number) || '-'}</td>
+                                                        <td class="px-4 py-2 text-sm text-slate-600">${escapeHtml(copy.library_name || libMap[copy.library_id]) || '-'}</td>
                                                         <td class="px-4 py-2">
                                                             <span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${copy.status === 'available' ? 'text-green-700 bg-green-50' : copy.status === 'borrowed' ? 'text-orange-700 bg-orange-50' : 'text-red-700 bg-red-50'}">
                                                                 ${copy.status === 'available' ? 'Доступен' : copy.status === 'borrowed' ? 'Выдан' : 'Недоступен'}
@@ -650,13 +732,30 @@
                                 <i data-lucide="copy" class="w-8 h-8 text-slate-400"></i>
                             </div>
                             <h3 class="text-lg font-semibold text-slate-900 mb-2">Нет экземпляров</h3>
-                            <p class="text-slate-600">Добавьте экземпляры книг через раздел "Книги"</p>
+                            <p class="text-slate-600 mb-4">Добавьте экземпляры книг через раздел "Книги"</p>
+                            <a href="#books" onclick="showSection('books')" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                <i data-lucide="book" class="w-4 h-4 mr-2"></i>
+                                Перейти к книгам
+                            </a>
                         </div>
                     `;
                 }
                 safeLucideInit();
             } catch (error) {
                 console.error('Error loading books with copies:', error);
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-3">
+                            <i data-lucide="alert-circle" class="w-6 h-6 text-red-600"></i>
+                        </div>
+                        <p class="text-red-500 font-medium">Ошибка загрузки экземпляров</p>
+                        <p class="text-sm text-slate-500 mt-1">${escapeHtml(error.message)}</p>
+                        <button onclick="loadBooksWithCopies()" class="mt-3 px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg">
+                            Повторить
+                        </button>
+                    </div>
+                `;
+                safeLucideInit();
             }
         }
         
@@ -985,25 +1084,55 @@
         
         // Open modal for adding book
         async function openAddBookModal() {
-            console.log('Opening add book modal');
+            console.log('Opening add book modal...');
             try {
-                await loadAuthors();
+                // Try to load authors, but don't fail completely if it errors
+                try {
+                    await loadAuthors();
+                } catch (authorError) {
+                    console.warn('Failed to load authors:', authorError);
+                    // If authors failed, show alert but still open modal
+                    // User might need to refresh or check connection
+                }
+                
                 currentEditingBookId = null;
                 document.getElementById('modal-title').textContent = 'Добавить книгу';
                 document.getElementById('book-form').reset();
                 populateAuthorSelect();
                 resetCoverSection();
-                // Show modal
-                document.getElementById('book-modal').classList.remove('hidden');
+                
+                // Show modal FIRST so user sees feedback
+                const modal = document.getElementById('book-modal');
+                if (!modal) {
+                    throw new Error('Modal element #book-modal not found in DOM');
+                }
+                modal.classList.remove('hidden');
                 console.log('Modal opened successfully');
+                
                 // Disable cover upload until book is created
-                document.getElementById('cover-input').disabled = true;
-                document.querySelector('#cover-section label').classList.add('opacity-50', 'cursor-not-allowed');
-                document.querySelector('#cover-section p.text-xs').textContent = 'Сначала сохраните книгу, чтобы загрузить обложку';
+                const coverInput = document.getElementById('cover-input');
+                if (coverInput) coverInput.disabled = true;
+                
+                const coverLabel = document.querySelector('#cover-section label');
+                if (coverLabel) coverLabel.classList.add('opacity-50', 'cursor-not-allowed');
+                
+                const coverHint = document.querySelector('#cover-section p.text-xs');
+                if (coverHint) coverHint.textContent = 'Сначала сохраните книгу, чтобы загрузить обложку';
+                
+                // Show warning if authors list is empty
+                if (!authorsList || authorsList.length === 0) {
+                    const authorSelect = document.getElementById('book-author');
+                    if (authorSelect) {
+                        authorSelect.innerHTML = '<option value="">Нет доступных авторов</option>';
+                    }
+                    // Don't alert here - let user see the empty dropdown
+                    console.warn('Authors list is empty - user needs to add authors first');
+                }
+                
                 safeLucideInit();
             } catch (error) {
                 console.error('Error opening add book modal:', error);
-                alert('Ошибка открытия модального окна. Проверьте консоль для деталей.');
+                alert('Ошибка открытия модального окна: ' + (error.message || 'Неизвестная ошибка'));
             }
         }
         
