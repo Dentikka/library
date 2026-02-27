@@ -32,6 +32,7 @@ async def search_books(
             Book.title,
             Author.name.label("author_name"),
             Book.year,
+            Book.cover_url,
             func.count(Copy.id).label("total_count"),
             func.sum(case((Copy.status == "available", 1), else_=0)).label("available_count")
         )
@@ -64,7 +65,7 @@ async def search_books(
     )
     
     # Group by book and author
-    base_stmt = base_stmt.group_by(Book.id, Book.title, Author.name, Book.year)
+    base_stmt = base_stmt.group_by(Book.id, Book.title, Author.name, Book.year, Book.cover_url)
     
     # Count total results before pagination
     count_stmt = select(func.count()).select_from(base_stmt.subquery())
@@ -85,7 +86,8 @@ async def search_books(
             author_name=row.author_name,
             year=row.year,
             available_count=row.available_count or 0,
-            total_count=row.total_count or 0
+            total_count=row.total_count or 0,
+            cover_url=row.cover_url
         )
         for row in rows
     ]
@@ -186,6 +188,7 @@ async def advanced_search(
             Book.title,
             Author.name.label("author_name"),
             Book.year,
+            Book.cover_url,
             func.count(Copy.id).label("total_count"),
             func.sum(case((Copy.status == "available", 1), else_=0)).label("available_count")
         )
@@ -217,7 +220,7 @@ async def advanced_search(
         base_stmt = base_stmt.filter(and_(*filters))
     
     # Group by book and author
-    base_stmt = base_stmt.group_by(Book.id, Book.title, Author.name, Book.year)
+    base_stmt = base_stmt.group_by(Book.id, Book.title, Author.name, Book.year, Book.cover_url)
     
     # Count total results before filtering by availability
     count_stmt = select(func.count()).select_from(base_stmt.subquery())
@@ -243,7 +246,8 @@ async def advanced_search(
                 author_name=row.author_name,
                 year=row.year,
                 available_count=row.available_count or 0,
-                total_count=row.total_count or 0
+                total_count=row.total_count or 0,
+                cover_url=row.cover_url
             )
         )
     

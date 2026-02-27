@@ -9,6 +9,7 @@ class SearchResult(BaseModel):
     year: Optional[int] = None
     available_count: int
     total_count: int
+    cover_url: Optional[str] = None
 
 
 class SearchResponse(BaseModel):
