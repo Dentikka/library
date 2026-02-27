@@ -662,6 +662,8 @@
         
         // Open author modal
         function openAddAuthorModal() {
+            currentEditingAuthorId = null;
+            document.getElementById('author-modal-title').textContent = 'Добавить автора';
             document.getElementById('author-form').reset();
             document.getElementById('author-modal').classList.remove('hidden');
             safeLucideInit();
@@ -672,7 +674,7 @@
             document.getElementById('author-modal').classList.add('hidden');
         }
         
-        // Save author
+        // Save author (create or update)
         async function saveAuthor(event) {
             event.preventDefault();
             const token = localStorage.getItem('access_token');
@@ -684,8 +686,13 @@
             }
             
             try {
-                const response = await fetch('/api/v1/authors', {
-                    method: 'POST',
+                const url = currentEditingAuthorId 
+                    ? `/api/v1/authors/${currentEditingAuthorId}`
+                    : '/api/v1/authors';
+                const method = currentEditingAuthorId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
@@ -696,10 +703,11 @@
                 if (response.ok) {
                     closeAuthorModal();
                     loadAuthorsList();
-                    alert('Автор успешно добавлен');
+                    alert(currentEditingAuthorId ? 'Автор успешно обновлен' : 'Автор успешно добавлен');
+                    currentEditingAuthorId = null;
                 } else {
                     const error = await response.json();
-                    alert('Ошибка: ' + (error.detail || 'Не удалось добавить автора'));
+                    alert('Ошибка: ' + (error.detail || 'Не удалось сохранить автора'));
                 }
             } catch (error) {
                 console.error('Error saving author:', error);
@@ -707,7 +715,21 @@
             }
         }
         
-        function editAuthor(id, name) { alert('Редактирование автора: ' + name); }
+        // Track editing state
+        let currentEditingAuthorId = null;
+        let currentEditingLibraryId = null;
+        
+        function openEditAuthorModal(id, name) {
+            currentEditingAuthorId = id;
+            document.getElementById('author-modal-title').textContent = 'Редактировать автора';
+            document.getElementById('author-name').value = name;
+            document.getElementById('author-modal').classList.remove('hidden');
+            safeLucideInit();
+        }
+        
+        function editAuthor(id, name) { 
+            openEditAuthorModal(id, name);
+        }
         async function deleteAuthor(id) { 
             if (!confirm('Удалить автора?')) {
                 return;
@@ -734,6 +756,8 @@
         
         // Open library modal
         function openAddLibraryModal() {
+            currentEditingLibraryId = null;
+            document.getElementById('library-modal-title').textContent = 'Добавить библиотеку';
             document.getElementById('library-form').reset();
             document.getElementById('library-modal').classList.remove('hidden');
             safeLucideInit();
@@ -744,7 +768,7 @@
             document.getElementById('library-modal').classList.add('hidden');
         }
         
-        // Save library
+        // Save library (create or update)
         async function saveLibrary(event) {
             event.preventDefault();
             const token = localStorage.getItem('access_token');
@@ -758,8 +782,13 @@
             }
             
             try {
-                const response = await fetch('/api/v1/libraries', {
-                    method: 'POST',
+                const url = currentEditingLibraryId 
+                    ? `/api/v1/libraries/${currentEditingLibraryId}`
+                    : '/api/v1/libraries';
+                const method = currentEditingLibraryId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
@@ -770,10 +799,11 @@
                 if (response.ok) {
                     closeLibraryModal();
                     loadLibrariesList();
-                    alert('Библиотека успешно добавлена');
+                    alert(currentEditingLibraryId ? 'Библиотека успешно обновлена' : 'Библиотека успешно добавлена');
+                    currentEditingLibraryId = null;
                 } else {
                     const error = await response.json();
-                    alert('Ошибка: ' + (error.detail || 'Не удалось добавить библиотеку'));
+                    alert('Ошибка: ' + (error.detail || 'Не удалось сохранить библиотеку'));
                 }
             } catch (error) {
                 console.error('Error saving library:', error);
@@ -781,7 +811,33 @@
             }
         }
         
-        function editLibrary(id) { alert('Редактирование библиотеки #' + id); }
+        async function openEditLibraryModal(id) {
+            currentEditingLibraryId = id;
+            document.getElementById('library-modal-title').textContent = 'Редактировать библиотеку';
+            
+            // Load library data
+            const token = localStorage.getItem('access_token');
+            try {
+                const response = await fetch(`/api/v1/libraries/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const library = await response.json();
+                    document.getElementById('library-name').value = library.name;
+                    document.getElementById('library-address').value = library.address;
+                    document.getElementById('library-phone').value = library.phone || '';
+                }
+            } catch (error) {
+                console.error('Error loading library:', error);
+            }
+            
+            document.getElementById('library-modal').classList.remove('hidden');
+            safeLucideInit();
+        }
+        
+        function editLibrary(id) { 
+            openEditLibraryModal(id);
+        }
         
         // Open copy modal
         async function openAddCopyModal(bookId) {
@@ -1336,7 +1392,7 @@
     <div id="author-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
             <div class="flex justify-between items-center p-6 border-b border-slate-200">
-                <h3 class="text-xl font-semibold text-slate-900">Добавить автора</h3>
+                <h3 id="author-modal-title" class="text-xl font-semibold text-slate-900">Добавить автора</h3>
                 <button onclick="closeAuthorModal()" class="text-slate-400 hover:text-slate-600">
                     <i data-lucide="x" class="w-6 h-6"></i>
                 </button>
@@ -1368,7 +1424,7 @@
     <div id="library-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
             <div class="flex justify-between items-center p-6 border-b border-slate-200">
-                <h3 class="text-xl font-semibold text-slate-900">Добавить библиотеку</h3>
+                <h3 id="library-modal-title" class="text-xl font-semibold text-slate-900">Добавить библиотеку</h3>
                 <button onclick="closeLibraryModal()" class="text-slate-400 hover:text-slate-600">
                     <i data-lucide="x" class="w-6 h-6"></i>
                 </button>

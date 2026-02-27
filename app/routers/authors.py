@@ -58,6 +58,43 @@ async def create_author(
     return AuthorResponse(id=new_author.id, name=new_author.name)
 
 
+@router.put("/{author_id}", response_model=AuthorResponse)
+async def update_author(
+    author_id: int,
+    author_data: AuthorCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_active_staff)
+):
+    """Update author (staff only)."""
+    result = await db.execute(
+        select(Author).filter(Author.id == author_id)
+    )
+    author = result.scalar_one_or_none()
+    
+    if not author:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Author not found"
+        )
+    
+    # Check if new name already exists (and it's not the same author)
+    if author_data.name != author.name:
+        existing = await db.execute(
+            select(Author).filter(Author.name == author_data.name)
+        )
+        if existing.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Author with this name already exists"
+            )
+    
+    author.name = author_data.name
+    await db.commit()
+    await db.refresh(author)
+    
+    return AuthorResponse(id=author.id, name=author.name)
+
+
 @router.delete("/{author_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_author(
     author_id: int,
