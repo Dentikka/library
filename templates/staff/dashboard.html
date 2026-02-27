@@ -695,9 +695,27 @@
         }
         
         function editAuthor(id, name) { alert('Редактирование автора: ' + name); }
-        function deleteAuthor(id) { 
-            if (confirm('Удалить автора?')) {
-                alert('Удаление будет реализовано в API');
+        async function deleteAuthor(id) { 
+            if (!confirm('Удалить автора?')) {
+                return;
+            }
+            
+            const token = localStorage.getItem('access_token');
+            try {
+                const response = await fetch(`/api/v1/authors/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    loadAuthorsList();
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Ошибка удаления автора');
+                }
+            } catch (error) {
+                console.error('Error deleting author:', error);
+                alert('Ошибка удаления автора');
             }
         }
         
@@ -738,7 +756,7 @@
                 
                 if (response.ok) {
                     closeLibraryModal();
-                    loadLibraries();
+                    loadLibrariesList();
                     alert('Библиотека успешно добавлена');
                 } else {
                     const error = await response.json();
@@ -813,7 +831,7 @@
                 
                 if (response.ok) {
                     closeCopyModal();
-                    loadCopies();
+                    loadBooksWithCopies();
                     alert('Экземпляр успешно добавлен');
                 } else {
                     const error = await response.json();
@@ -825,9 +843,27 @@
             }
         }
         
-        function deleteCopy(copyId, bookId) { 
-            if (confirm('Удалить экземпляр?')) {
-                alert('Удаление будет реализовано в API');
+        async function deleteCopy(copyId, bookId) { 
+            if (!confirm('Удалить экземпляр?')) {
+                return;
+            }
+            
+            const token = localStorage.getItem('access_token');
+            try {
+                const response = await fetch(`/api/v1/books/copies/${copyId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    loadBooksWithCopies();
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Ошибка удаления экземпляра');
+                }
+            } catch (error) {
+                console.error('Error deleting copy:', error);
+                alert('Ошибка удаления экземпляра');
             }
         }
         

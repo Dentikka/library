@@ -56,3 +56,26 @@ async def create_author(
     await db.refresh(new_author)
     
     return AuthorResponse(id=new_author.id, name=new_author.name)
+
+
+@router.delete("/{author_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_author(
+    author_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_active_staff)
+):
+    """Delete author (staff only)."""
+    result = await db.execute(
+        select(Author).filter(Author.id == author_id)
+    )
+    author = result.scalar_one_or_none()
+    
+    if not author:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Author not found"
+        )
+    
+    await db.delete(author)
+    await db.commit()
+    return None
