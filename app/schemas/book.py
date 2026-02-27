@@ -46,12 +46,14 @@ class BookDetailResponse(BookResponse):
 class CopyBase(BaseModel):
     book_id: int
     library_id: int
-    inventory_number: str
+    inventory_number: Optional[str] = None
     status: str = "available"
 
 
-class CopyCreate(CopyBase):
-    pass
+class CopyCreate(BaseModel):
+    library_id: int
+    inventory_number: Optional[str] = None
+    status: str = "available"
 
 
 class CopyUpdate(BaseModel):
