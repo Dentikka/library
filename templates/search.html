@@ -187,7 +187,20 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('[Search] Initial load error:', err);
         });
     } else {
-        console.log('[Search] No query, skipping load');
+        console.log('[Search] No query, showing empty state');
+        document.getElementById('results-count').textContent = '';
+        document.getElementById('results-container').innerHTML = `
+            <div class="text-center py-12">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
+                    <i data-lucide="search" class="w-8 h-8 text-slate-400"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-900 mb-2">Введите поисковый запрос</h3>
+                <p class="text-slate-600">Начните вводить название книги или имя автора</p>
+            </div>
+        `;
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
     }
 });
 
