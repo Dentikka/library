@@ -4,310 +4,286 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="bg-gradient-to-br from-blue-700 via-blue-800 to-slate-900 text-white py-16 md:py-20">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="max-w-3xl">
-            <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
-                Централизованная библиотечная система города Вологды
-            </h1>
-            <p class="text-xl text-blue-100 mb-8">
-                Муниципальное бюджетное учреждение культуры, объединяющее 11 филиалов 
-                и служащее культурным и образовательным центром для вологжан с 1977 года
-            </p>
-            <div class="flex flex-wrap gap-4">
-                <a href="/libraries" class="inline-flex items-center gap-2 bg-white text-blue-800 font-semibold px-6 py-3 rounded-lg hover:bg-blue-50 transition">
-                    <i data-lucide="map-pin" class="w-5 h-5"></i>
-                    Найти библиотеку
-                </a>
-                <a href="/#search" class="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-500 transition">
-                    <i data-lucide="search" class="w-5 h-5"></i>
-                    Электронный каталог
-                </a>
-            </div>
+<section class="bg-gradient-to-br from-blue-700 via-blue-800 to-slate-900 text-white py-16 md:py-24">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full mb-6">
+            <i data-lucide="book-open" class="w-4 h-4"></i>
+            <span class="text-sm font-medium">С 1945 года</span>
         </div>
+        <h1 class="text-3xl md:text-5xl font-bold mb-6">
+            Централизованная библиотечная система города Вологды
+        </h1>
+        <p class="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto">
+            Крупнейшее библиотечное учреждение Вологодской области: 
+            11 филиалов, электронный каталог, современные сервисы для читателей
+        </p>
     </div>
 </section>
 
-<!-- Statistics Section -->
-<section class="py-12 bg-white">
+<!-- Stats Section -->
+<section class="py-12 bg-white -mt-8">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-2xl md:text-3xl font-bold text-slate-900 mb-8 text-center">ЦБС Вологды в цифрах</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div class="text-center p-6 bg-slate-50 rounded-xl">
-                <div class="text-3xl md:text-4xl font-bold text-blue-700 mb-2">541K+</div>
-                <div class="text-slate-600">книг в фондах</div>
-            </div>
-            <div class="text-center p-6 bg-slate-50 rounded-xl">
-                <div class="text-3xl md:text-4xl font-bold text-blue-700 mb-2">64K+</div>
-                <div class="text-slate-600">читателей</div>
-            </div>
-            <div class="text-center p-6 bg-slate-50 rounded-xl">
+        <div class="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div class="text-center">
                 <div class="text-3xl md:text-4xl font-bold text-blue-700 mb-2">11</div>
-                <div class="text-slate-600">филиалов</div>
+                <div class="text-sm text-slate-600">филиалов</div>
             </div>
-            <div class="text-center p-6 bg-slate-50 rounded-xl">
-                <div class="text-3xl md:text-4xl font-bold text-blue-700 mb-2">48+</div>
-                <div class="text-slate-600">лет истории</div>
+            <div class="text-center">
+                <div class="text-3xl md:text-4xl font-bold text-blue-700 mb-2">500+</div>
+                <div class="text-sm text-slate-600">тыс. книг</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl md:text-4xl font-bold text-blue-700 mb-2">70+</div>
+                <div class="text-sm text-slate-600">сотрудников</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl md:text-4xl font-bold text-blue-700 mb-2">80</div>
+                <div class="text-sm text-slate-600">лет истории</div>
             </div>
         </div>
-        <p class="text-center text-sm text-slate-500 mt-4">Данные на конец 2024 года</p>
     </div>
 </section>
 
-<!-- History Section -->
-<section class="py-12 bg-slate-50">
+<!-- About Section -->
+<section class="py-16 bg-slate-50">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-                <h2 class="text-2xl md:text-3xl font-bold text-slate-900 mb-6">История</h2>
-                <div class="space-y-4 text-slate-600">
-                    <p>
-                        <strong class="text-slate-900">5 апреля 1977 года</strong> — день рождения Централизованной библиотечной системы города Вологды. 
-                        Именно тогда решением Вологодского горисполкома была создана ЦБС, объединившая разрозненные городские библиотеки в единую сеть.
-                    </p>
-                    <p>
-                        За почти полвека истории ЦБС прошла путь от традиционных библиотек с бумажными каталогами 
-                        до современных культурных центров с электронными каталогами, цифровыми ресурсами и множеством 
-                        образовательных программ.
-                    </p>
-                    <p>
-                        Сегодня ЦБС Вологды — это не просто место, где хранятся книги. Это пространство для чтения, 
-                        обучения, творчества и общения, где каждый вологжан может найти что-то для себя.
-                    </p>
-                </div>
+                <h2 class="text-3xl font-bold text-slate-900 mb-6">О системе</h2>
+                <p class="text-slate-600 mb-4 leading-relaxed">
+                    Муниципальное бюджетное учреждение культуры «Централизованная библиотечная система 
+                    города Вологды» (МБУК «ЦБС города Вологды») — объединение публичных библиотек, 
+                    обслуживающих жителей города Вологды и Вологодского района.
+                </p>
+                <p class="text-slate-600 mb-4 leading-relaxed">
+                    ЦБС была создана в 1945 году и с тех пор остаётся главным хранителем книжного 
+                    наследия Вологды. Система включает центральную библиотеку имени писателя 
+                    В.И. Белова и 10 филиалов в разных районах города и области.
+                </p>
+                <p class="text-slate-600 leading-relaxed">
+                    Сегодня ЦБС — это современное учреждение, где традиции книжной культуры 
+                    сочетаются с цифровыми технологиями. Электронный каталог, онлайн-сервисы, 
+                    электронная доставка документов — всё это доступно нашим читателям.
+                </p>
             </div>
-            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                    <i data-lucide="clock" class="w-5 h-5 text-blue-700"></i>
-                    Ключевые даты
-                </h3>
-                <ul class="space-y-4">
-                    <li class="flex gap-4">
-                        <span class="font-bold text-blue-700 w-16 flex-shrink-0">1977</span>
-                        <span class="text-slate-600">Образование ЦБС города Вологды</span>
-                    </li>
-                    <li class="flex gap-4">
-                        <span class="font-bold text-blue-700 w-16 flex-shrink-0">2000-е</span>
-                        <span class="text-slate-600">Компьютеризация библиотек, создание электронного каталога</span>
-                    </li>
-                    <li class="flex gap-4">
-                        <span class="font-bold text-blue-700 w-16 flex-shrink-0">2010-е</span>
-                        <span class="text-slate-600">Открытие Центра писателя В.И. Белова, модернизация филиалов</span>
-                    </li>
-                    <li class="flex gap-4">
-                        <span class="font-bold text-blue-700 w-16 flex-shrink-0">2020-е</span>
-                        <span class="text-slate-600">Цифровая трансформация, онлайн-услуги, новый веб-каталог</span>
-                    </li>
-                </ul>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <i data-lucide="book-open" class="w-6 h-6 text-blue-700"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 mb-2">Фонд</h3>
+                    <p class="text-sm text-slate-600">Более 500 тысяч изданий: книги, периодика, электронные ресурсы</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                        <i data-lucide="users" class="w-6 h-6 text-green-700"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 mb-2">Читатели</h3>
+                    <p class="text-sm text-slate-600">Обслуживаем 40+ тысяч читателей ежегодно</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                        <i data-lucide="calendar" class="w-6 h-6 text-purple-700"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 mb-2">Мероприятия</h3>
+                    <p class="text-sm text-slate-600">Книжные выставки, встречи с авторами, клубы по интересам</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                        <i data-lucide="monitor" class="w-6 h-6 text-orange-700"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 mb-2">Цифровизация</h3>
+                    <p class="text-sm text-slate-600">Электронный каталог, Wi-Fi, компьютерные классы</p>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Mission Section -->
-<section class="py-12 bg-white">
+<section class="py-16 bg-white">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center max-w-3xl mx-auto mb-12">
-            <h2 class="text-2xl md:text-3xl font-bold text-slate-900 mb-4">Миссия и ценности</h2>
-            <p class="text-slate-600">
-                Наша цель — обеспечить свободный доступ к информации и культурным ценностям 
-                для всех жителей города Вологды
-            </p>
-        </div>
-        <div class="grid md:grid-cols-3 gap-8">
-            <div class="bg-slate-50 p-6 rounded-xl">
-                <div class="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                    <i data-lucide="book-open" class="w-6 h-6 text-blue-700"></i>
-                </div>
-                <h3 class="font-semibold text-slate-900 mb-2">Доступ к знаниям</h3>
-                <p class="text-slate-600 text-sm">
-                    Обеспечиваем свободный доступ к книгам, периодике и цифровым ресурсам 
-                    для всех категорий граждан
+        <div class="bg-gradient-to-br from-blue-50 to-slate-50 rounded-2xl p-8 md:p-12">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-3xl font-bold text-slate-900 mb-6">Наша миссия</h2>
+                <p class="text-lg text-slate-600 leading-relaxed mb-8">
+                    Сохранять и приумножать книжное наследие, обеспечивать свободный доступ 
+                    к информации и знаниям для всех жителей Вологды, способствовать 
+                    культурному развитию и образованию общества.
                 </p>
-            </div>
-            <div class="bg-slate-50 p-6 rounded-xl">
-                <div class="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                    <i data-lucide="users" class="w-6 h-6 text-blue-700"></i>
-                </div>
-                <h3 class="font-semibold text-slate-900 mb-2">Сообщество</h3>
-                <p class="text-slate-600 text-sm">
-                    Создаём пространства для общения, обучения и творчества — 
-                    места встречи людей разных поколений
-                </p>
-            </div>
-            <div class="bg-slate-50 p-6 rounded-xl">
-                <div class="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                    <i data-lucide="sparkles" class="w-6 h-6 text-blue-700"></i>
-                </div>
-                <h3 class="font-semibold text-slate-900 mb-2">Культура и просвещение</h3>
-                <p class="text-slate-600 text-sm">
-                    Проводим мероприятия, сохраняем и популяризируем культурное наследие 
-                    Вологды и региона
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Network Section -->
-<section class="py-12 bg-slate-50">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid md:grid-cols-2 gap-12 items-center">
-            <div class="order-2 md:order-1">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="font-semibold text-slate-900 mb-4">Состав ЦБС</h3>
-                    <p class="text-slate-600 mb-4">
-                        В состав МБУК «ЦБС г. Вологды» входят 11 филиалов, расположенных 
-                        в разных районах города и Вологодского района:
-                    </p>
-                    <ul class="space-y-2 text-sm text-slate-600">
-                        <li class="flex items-center gap-2">
-                            <i data-lucide="check-circle" class="w-4 h-4 text-green-600"></i>
-                            Центр писателя В.И. Белова (центральная библиотека)
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i data-lucide="check-circle" class="w-4 h-4 text-green-600"></i>
-                            10 районных библиотек-филиалов
-                        </li>
-                    </ul>
-                    <div class="mt-6 pt-6 border-t border-slate-200">
-                        <p class="text-sm text-slate-500 mb-4">
-                            Каждый шестой житель Вологды — читатель городских библиотек
-                        </p>
-                        <a href="/libraries" class="inline-flex items-center gap-2 text-blue-700 font-medium hover:text-blue-800">
-                            Посмотреть все библиотеки
-                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                        </a>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-green-600"></i>
+                        <span class="text-sm font-medium text-slate-700">Свободный доступ к знаниям</span>
+                    </div>
+                    <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-green-600"></i>
+                        <span class="text-sm font-medium text-slate-700">Сохранение культурного наследия</span>
+                    </div>
+                    <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-green-600"></i>
+                        <span class="text-sm font-medium text-slate-700">Современные технологии</span>
                     </div>
                 </div>
             </div>
-            <div class="order-1 md:order-2">
-                <h2 class="text-2xl md:text-3xl font-bold text-slate-900 mb-6">Библиотечная сеть</h2>
-                <p class="text-slate-600 mb-4">
-                    ЦБС объединяет библиотеки разного масштаба — от крупных центров 
-                    до небольших филиалов в отдалённых микрорайонах.
-                </p>
-                <p class="text-slate-600 mb-4">
-                    Среди них: Центр писателя В.И. Белова с уникальными коллекциями 
-                    по вологодской краеведческой литературе, Центр экологического просвещения, 
-                    Интеллект-центр, библиотеки семейного чтения.
-                </p>
-                <p class="text-slate-600">
-                    В 2024 году библиотеки провели более 3600 мероприятий 
-                    с посещаемостью около 100 тысяч человек.
-                </p>
+        </div>
+    </div>
+</section>
+
+<!-- History Timeline -->
+<section class="py-16 bg-slate-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl font-bold text-slate-900 mb-12 text-center">История развития</h2>
+        <div class="space-y-8">
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+                <div class="md:w-32 flex-shrink-0">
+                    <div class="inline-block px-4 py-2 bg-blue-700 text-white font-bold rounded-lg">1945</div>
+                </div>
+                <div class="flex-grow bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-semibold text-slate-900 mb-2">Основание ЦБС</h3>
+                    <p class="text-slate-600">Создание Централизованной библиотечной системы на базе городских библиотек Вологды</p>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+                <div class="md:w-32 flex-shrink-0">
+                    <div class="inline-block px-4 py-2 bg-blue-700 text-white font-bold rounded-lg">1970-е</div>
+                </div>
+                <div class="flex-grow bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-semibold text-slate-900 mb-2">Расширение сети</h3>
+                    <p class="text-slate-600">Открытие новых филиалов в жилых районах города, формирование современной структуры ЦБС</p>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+                <div class="md:w-32 flex-shrink-0">
+                    <div class="inline-block px-4 py-2 bg-blue-700 text-white font-bold rounded-lg">1995</div>
+                </div>
+                <div class="flex-grow bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-semibold text-slate-900 mb-2">Имя В.И. Белова</h3>
+                    <p class="text-slate-600">Центральной библиотеке присвоено имя выдающегося вологодского писателя Василия Ивановича Белова</p>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+                <div class="md:w-32 flex-shrink-0">
+                    <div class="inline-block px-4 py-2 bg-blue-700 text-white font-bold rounded-lg">2000-е</div>
+                </div>
+                <div class="flex-grow bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-semibold text-slate-900 mb-2">Цифровая эпоха</h3>
+                    <p class="text-slate-600">Компьютеризация библиотек, создание электронного каталога, запуск первого сайта</p>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+                <div class="md:w-32 flex-shrink-0">
+                    <div class="inline-block px-4 py-2 bg-blue-700 text-white font-bold rounded-lg">2020-е</div>
+                </div>
+                <div class="flex-grow bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-semibold text-slate-900 mb-2">Современность</h3>
+                    <p class="text-slate-600">Обновлённый электронный каталог, онлайн-сервисы, цифровые библиотечные сервисы</p>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Management Section -->
-<section class="py-12 bg-white">
+<!-- Leadership Section -->
+<section class="py-16 bg-white">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-2xl md:text-3xl font-bold text-slate-900 mb-8 text-center">Руководство</h2>
-        <div class="max-w-2xl mx-auto bg-slate-50 rounded-xl p-8">
-            <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
-                <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="user" class="w-10 h-10 text-blue-700"></i>
-                </div>
-                <div class="text-center md:text-left">
-                    <h3 class="text-lg font-semibold text-slate-900">Зелинская Татьяна Анатольевна</h3>
-                    <p class="text-blue-700 font-medium mb-2">Директор МБУК «ЦБС г. Вологды»</p>
-                    <div class="space-y-1 text-sm text-slate-600">
-                        <p class="flex items-center justify-center md:justify-start gap-2">
-                            <i data-lucide="phone" class="w-4 h-4"></i>
-                            <a href="tel:88172532869" class="hover:text-blue-700">8 (8172) 53-28-69</a>
-                        </p>
-                        <p class="flex items-center justify-center md:justify-start gap-2">
-                            <i data-lucide="printer" class="w-4 h-4"></i>
-                            <span>8 (8172) 53-33-60 (факс)</span>
-                        </p>
-                        <p class="flex items-center justify-center md:justify-start gap-2">
-                            <i data-lucide="mail" class="w-4 h-4"></i>
-                            <a href="mailto:adm-cbs@mail.ru" class="hover:text-blue-700">adm-cbs@mail.ru</a>
+        <h2 class="text-3xl font-bold text-slate-900 mb-12 text-center">Руководство</h2>
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-slate-50 rounded-xl p-8 border border-slate-200">
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                    <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="user" class="w-10 h-10 text-blue-700"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-slate-900 mb-1">Директор ЦБС</h3>
+                        <p class="text-blue-700 font-medium mb-4">Руководитель учреждения</p>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            Руководство деятельностью ЦБС, стратегическое планирование, 
+                            развитие библиотечной системы города. Приёмная: (8172) 53-28-69
                         </p>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="mt-8 text-center">
-            <p class="text-slate-600">
-                <strong class="text-slate-900">Учредитель:</strong> 
-                Управление культуры и историко-культурного наследия Администрации города Вологды
-            </p>
-            <p class="text-sm text-slate-500 mt-2">
-                Начальник управления — Дурягина Юлия Павловна<br>
-                Телефон: 8 (8172) 72-27-64
-            </p>
-        </div>
     </div>
 </section>
 
-<!-- Contacts Section -->
-<section class="py-12 bg-slate-50">
+<!-- Contact Section -->
+<section class="py-16 bg-slate-50">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-2xl md:text-3xl font-bold text-slate-900 mb-8 text-center">Контакты</h2>
-        <div class="grid md:grid-cols-2 gap-8">
-            <!-- Address Card -->
+        <h2 class="text-3xl font-bold text-slate-900 mb-12 text-center">Контакты</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Central Library -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h3 class="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                    <i data-lucide="building-2" class="w-5 h-5 text-blue-700"></i>
-                    Центральная библиотека
-                </h3>
-                <ul class="space-y-3 text-slate-600">
-                    <li class="flex items-start gap-3">
-                        <i data-lucide="map-pin" class="w-5 h-5 text-slate-400 mt-0.5"></i>
-                        <span>160026, г. Вологда, ул. Щетинина, д. 5</span>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-blue-100 p-2 rounded-lg">
+                        <i data-lucide="library" class="w-5 h-5 text-blue-700"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900">Центральная библиотека</h3>
+                </div>
+                <ul class="space-y-3 text-sm">
+                    <li class="flex items-start gap-2">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0"></i>
+                        <span class="text-slate-600">ул. Пушкинская, 2</span>
                     </li>
-                    <li class="flex items-center gap-3">
-                        <i data-lucide="phone" class="w-5 h-5 text-slate-400"></i>
-                        <a href="tel:88172532869" class="hover:text-blue-700">8 (8172) 53-28-69</a>
+                    <li class="flex items-center gap-2">
+                        <i data-lucide="phone" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+                        <a href="tel:+78172723345" class="text-slate-600 hover:text-blue-700">(8172) 72-33-45</a>
                     </li>
-                    <li class="flex items-center gap-3">
-                        <i data-lucide="printer" class="w-5 h-5 text-slate-400"></i>
-                        <span>8 (8172) 53-33-60</span>
-                    </li>
-                    <li class="flex items-center gap-3">
-                        <i data-lucide="mail" class="w-5 h-5 text-slate-400"></i>
-                        <a href="mailto:adm-cbs@mail.ru" class="hover:text-blue-700">adm-cbs@mail.ru</a>
+                    <li class="flex items-start gap-2">
+                        <i data-lucide="clock" class="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0"></i>
+                        <span class="text-slate-600">Пн–Пт: 10:00–19:00<br>Сб: 10:00–18:00</span>
                     </li>
                 </ul>
             </div>
-            
-            <!-- Social & Online Card -->
+
+            <!-- Administration -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h3 class="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                    <i data-lucide="globe" class="w-5 h-5 text-blue-700"></i>
-                    Мы в интернете
-                </h3>
-                <ul class="space-y-3">
-                    <li>
-                        <a href="https://vk.com/vologdalibrary" target="_blank" rel="noopener" 
-                           class="flex items-center gap-3 text-slate-600 hover:text-blue-700 transition">
-                            <i data-lucide="facebook" class="w-5 h-5"></i>
-                            <span>ВКонтакте — vk.com/vologdalibrary</span>
-                        </a>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-green-100 p-2 rounded-lg">
+                        <i data-lucide="building-2" class="w-5 h-5 text-green-700"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900">Администрация</h3>
+                </div>
+                <ul class="space-y-3 text-sm">
+                    <li class="flex items-start gap-2">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0"></i>
+                        <span class="text-slate-600">ул. Щетинина, 5</span>
                     </li>
-                    <li>
-                        <a href="https://www.youtube.com/channel/UC6AK_QEhAtFHIS6U-nCSi5w" target="_blank" rel="noopener"
-                           class="flex items-center gap-3 text-slate-600 hover:text-blue-700 transition">
-                            <i data-lucide="youtube" class="w-5 h-5"></i>
-                            <span>YouTube-канал</span>
-                        </a>
+                    <li class="flex items-center gap-2">
+                        <i data-lucide="phone" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+                        <a href="tel:+78172532869" class="text-slate-600 hover:text-blue-700">(8172) 53-28-69</a>
                     </li>
-                    <li>
-                        <a href="https://cbs-vologda.ru/" target="_blank" rel="noopener"
-                           class="flex items-center gap-3 text-slate-600 hover:text-blue-700 transition">
-                            <i data-lucide="external-link" class="w-5 h-5"></i>
-                            <span>Официальный сайт — cbs-vologda.ru</span>
-                        </a>
+                    <li class="flex items-center gap-2">
+                        <i data-lucide="mail" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+                        <a href="mailto:cbs@vologda.ru" class="text-slate-600 hover:text-blue-700">cbs@vologda.ru</a>
                     </li>
                 </ul>
-                <div class="mt-6 pt-6 border-t border-slate-200">
-                    <a href="/libraries" class="inline-flex items-center justify-center gap-2 w-full bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-800 transition">
-                        <i data-lucide="map-pin" class="w-5 h-5"></i>
-                        Контакты всех библиотек
+            </div>
+
+            <!-- Contact CTA -->
+            <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl shadow-lg p-6 text-white">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-white/20 p-2 rounded-lg">
+                        <i data-lucide="message-circle" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <h3 class="font-semibold">Обратная связь</h3>
+                </div>
+                <p class="text-blue-100 text-sm mb-4">
+                    Есть вопросы или предложения? Свяжитесь с нами удобным способом.
+                </p>
+                <div class="space-y-2">
+                    <a href="tel:+78172532869" class="flex items-center gap-2 text-sm hover:text-blue-200 transition">
+                        <i data-lucide="phone" class="w-4 h-4"></i>
+                        Позвонить
+                    </a>
+                    <a href="mailto:cbs@vologda.ru" class="flex items-center gap-2 text-sm hover:text-blue-200 transition">
+                        <i data-lucide="mail" class="w-4 h-4"></i>
+                        Написать письмо
+                    </a>
+                    <a href="/libraries" class="flex items-center gap-2 text-sm hover:text-blue-200 transition">
+                        <i data-lucide="map-pin" class="w-4 h-4"></i>
+                        Найти ближайший филиал
                     </a>
                 </div>
             </div>
@@ -315,19 +291,24 @@
     </div>
 </section>
 
-<!-- Legal Info Section -->
-<section class="py-8 bg-white border-t border-slate-200">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center text-sm text-slate-500">
-            <p class="mb-2">
-                <strong>Полное наименование:</strong> Муниципальное бюджетное учреждение культуры 
-                «Централизованная библиотечная система г. Вологды»
-            </p>
-            <p class="mb-2">
-                <strong>Юридический адрес:</strong> 160026, Российская Федерация, Вологодская область, 
-                г. Вологда, ул. Щетинина, д. 5
-            </p>
-            <p>© 1977–2025 МБУК «ЦБС г. Вологды»</p>
+<!-- CTA Section -->
+<section class="py-16 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl font-bold text-slate-900 mb-4">
+            Станьте читателем ЦБС
+        </h2>
+        <p class="text-lg text-slate-600 mb-8">
+            Запишитесь в любой из 11 филиалов и получите доступ ко всему фонду библиотечной системы
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/libraries" class="inline-flex items-center justify-center gap-2 bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-800 transition">
+                <i data-lucide="map-pin" class="w-5 h-5"></i>
+                Найти библиотеку
+            </a>
+            <a href="/" class="inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700 font-semibold px-8 py-3 rounded-lg hover:bg-slate-200 transition">
+                <i data-lucide="search" class="w-5 h-5"></i>
+                Поиск книг
+            </a>
         </div>
     </div>
 </section>
