@@ -1084,15 +1084,17 @@
         
         // Open modal for adding book
         async function openAddBookModal() {
-            console.log('Opening add book modal...');
+            console.log('[BUG-2] Opening add book modal...');
             try {
                 // Try to load authors, but don't fail completely if it errors
+                console.log('[BUG-2] Loading authors...');
                 try {
                     await loadAuthors();
+                    console.log('[BUG-2] Authors loaded successfully:', authorsList.length, 'authors');
                 } catch (authorError) {
-                    console.warn('Failed to load authors:', authorError);
-                    // If authors failed, show alert but still open modal
-                    // User might need to refresh or check connection
+                    console.error('[BUG-2] Failed to load authors:', authorError);
+                    alert('Ошибка загрузки авторов. Пожалуйста, обновите страницу.');
+                    return;
                 }
                 
                 currentEditingBookId = null;
