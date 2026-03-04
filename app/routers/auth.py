@@ -87,43 +87,53 @@ async def login(
     Login endpoint. Accepts form data (username/password).
     Returns access and refresh tokens.
     """
-    user = await authenticate_user(db, form_data.username, form_data.password)
-    
-    if not user:
-        logger.warning(
-            f"Failed login attempt for user: {form_data.username}",
-            extra={"username": form_data.username}
+    try:
+        logger.info(f"Login attempt for user: {form_data.username}")
+        user = await authenticate_user(db, form_data.username, form_data.password)
+        
+        if not user:
+            logger.warning(
+                f"Failed login attempt for user: {form_data.username}",
+                extra={"username": form_data.username}
+            )
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        if not user.is_active:
+            logger.warning(
+                f"Login attempt for inactive user: {form_data.username}",
+                extra={"username": form_data.username, "user_id": user.id}
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User is inactive"
+            )
+        
+        access_token = create_access_token(user.id)
+        refresh_token = create_refresh_token(user.id)
+        
+        request_id = getattr(request.state, 'request_id', 'unknown')
+        logger.info(
+            f"User logged in: {user.username}",
+            extra={"user_id": user.id, "username": user.username, "request_id": request_id}
         )
+        
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error during authentication: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Authentication error: {str(e)}"
         )
-    
-    if not user.is_active:
-        logger.warning(
-            f"Login attempt for inactive user: {form_data.username}",
-            extra={"username": form_data.username, "user_id": user.id}
-        )
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User is inactive"
-        )
-    
-    access_token = create_access_token(user.id)
-    refresh_token = create_refresh_token(user.id)
-    
-    request_id = getattr(request.state, 'request_id', 'unknown')
-    logger.info(
-        f"User logged in: {user.username}",
-        extra={"user_id": user.id, "username": user.username, "request_id": request_id}
-    )
-    
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer"
-    }
 
 
 @router.post("/refresh", response_model=Token)
